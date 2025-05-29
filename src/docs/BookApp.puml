@@ -1,6 +1,17 @@
 @startuml
 
 package presentation {
+    +class Main {
+        +{static}main(args: String[]): void
+    }
+
+    +class MainScreenView {
+
+    }
+
+    +class MainScreenController {
+    }
+    
 }
 
 package domain {
@@ -8,5 +19,7 @@ package domain {
 
 package datasource {
 }
+
+MainScreenView ..> Main
 
 @enduml
