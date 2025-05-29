@@ -1,0 +1,12 @@
+@startuml
+
+package presentation {
+}
+
+package domain {
+}
+
+package datasource {
+}
+
+@enduml
