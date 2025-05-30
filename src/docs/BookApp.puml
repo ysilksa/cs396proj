@@ -5,21 +5,110 @@ package presentation {
         +{static}main(args: String[]): void
     }
 
-    +class MainScreenView {
+    +class HomeScreenView {
+        +HomeScreenView()
+    }
+
+    +class HomeScreenController {
+        -view: HomeScreenView
+
+        +HomeScreenController(view: HomeScreenView)
+    }
+
+    +class LoginView {
+        -usernameInput: JTextField
+        -passwordInput: JTextField
+        -submitForm: JButton
+
+        +LoginView()
+        +displayUsernameInput(): void
+        +displayPasswordInput(): void
+        +displayIncorrectUsername(): void
+        +displayIncorrectPassword(): void
+        +displaySuccess(): void
 
     }
 
-    +class MainScreenController {
+    +class LoginController {
+        -view: LoginView
+
+        +LoginController(view: LoginView)
+        +handleUsernameInput(): void
+        +saltPasswordInput(): void
+        +handlePasswordInput(): void
+        +validateCredentials(): boolean
     }
-    
+
+    +class RegisterView {
+        -usernameInput: JTextField
+        -passwordInput: JTextField
+         -submitForm: JButton
+
+        +RegisterView()
+        +displayUsernameInput(): void
+        +displayPasswordInput(): void
+        +displayInvalidUsername(): void
+        +displayInvalidPassword(): void
+        +displaySuccess(): void
+    }
+
+    +class RegisterController {
+        -view: RegisterView
+
+        +RegisterController(view: RegisterView)
+        +handleUsernameInput(): void
+        +handlePasswordInput(): void
+        +validateUsername(): boolean
+        +validatePassword(): boolean
+        +saltPasswordInput(): void
+    }
+
+    +class ProfileView {
+        +ProfileView()
+    }
+
+    +class ProfileController {
+        -view: ProfileView
+
+        +ProfileController(view: ProfileView)
+    }
+
+    +class CommunityView {
+        +CommunityView()
+    }
+
+    +class CommunityController {
+        -view: CommunityView
+
+        +CommunityController(view: CommunityView)
+    }
 }
 
 package domain {
+
 }
 
 package datasource {
+
 }
 
-MainScreenView ..> Main
+' presentation dependencies
+HomeScreenView ..> Main
+LoginView ..> Main
+RegisterView ..> Main
+ProfileView ..> Main
+CommunityView ..> Main
+
+HomeScreenController --> HomeScreenView
+LoginController --> LoginView
+RegisterController --> RegisterView
+ProfileController --> ProfileView
+CommunityController --> CommunityView
+
+' domain dependencies
+
+
+' datasource dependencies
+
 
 @enduml
