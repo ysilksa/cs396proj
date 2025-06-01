@@ -120,17 +120,19 @@ package presentation {
         +displayUsers(): void
         +displayDescription(): void
 
+    }
+
     +class CreateGroupView {
-        -groupNameInput: JTextField
-        -descriptionInput: JTextArea
-        -createButton: JButton
-        -cancelButton: JButton
-        -errorLabel: JLabel
+            -groupNameInput: JTextField
+            -descriptionInput: JTextArea
+            -createButton: JButton
+            -cancelButton: JButton
+            -errorLabel: JLabel
 
-        +CreateGroupView()
+            +CreateGroupView()
 
-        +displayError(): void
-        +displaySuccess(): void
+            +displayError(): void
+            +displaySuccess(): void
 
     }
 
@@ -300,7 +302,7 @@ package domain {
             -pagesRead: int
             -starReview: int
             -writtenReview: String
-            bookFile: File
+            -bookFile: File
 
             +Book(bookFile: File, genre: Genre, totalPages: int)
         }
@@ -315,7 +317,7 @@ package domain {
             ROMANCE
             SCIENCE_FICTION
         }
-}
+    }
 
     package bookGroup {
         +class BookGroup {
@@ -379,6 +381,7 @@ package domain {
             +getErrorMessage(): String
         }
     }
+}
 
 
 package datasource {
@@ -426,7 +429,7 @@ package datasource {
         -users: Map<String, UserDTO>
         -usersByEmail: Map<String, UserDTO>
 
-        +ExampleUserRepository()
+        +ExampleUserDatabase()
 
         +save(userDTO: UserDTO): void
         +findByUsername(username: String): UserDTO
@@ -439,7 +442,7 @@ package datasource {
     +class ExampleBookGroupDataBase {
         -groups: Map<String, BookGroupDTO>
 
-        +ExampleBookGroupRepository()
+        +ExampleBookGroupDatabase()
 
         +save(bookGroupDTO: BookGroupDTO): void
         +findById(groupId: String): BookGroupDTO
