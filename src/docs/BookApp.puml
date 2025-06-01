@@ -36,7 +36,7 @@ package presentation {
 
         +LoginController(view: LoginView, authService: Authentication)
 
-        ' handle login will extract the creditials & call authenticateservice
+        ' handle login will extract the credentials & call authenticateservice
         +handleLogin(): void
         -extractCredentials(): LoginCredentials
         -validateInputNotEmpty(): boolean
@@ -76,10 +76,49 @@ package presentation {
     }
 
     +class ProfileController {
+        -model: User
         -view: ProfileView
 
         +ProfileController(view: ProfileView)
     }
+
+
+    +class BookView {
+        -uploadBookButton: JButton
+        -submitButton: JButton
+        -bookFileChooser: JFileChooser
+        -bookGenreChooser: JComboBox<Genre>
+        -errorLabel: JLabel
+
+        +BookView()
+
+        +displayAvailableBooks(books: List<Book>): void
+        +addSubmitListener(listener: ActionListener): void
+        +displayError(): void
+        +show(): void
+        +hide(): void
+    }
+
+    +class BookController {
+        -view: BookView
+        -userDetails: UserDetails
+        -currentGroup: BookGroup
+
+        +BookController(view: BookView, userDetails: UserDetails, group: BookGroup)
+
+        +handleAddBook(): void
+        -uploadBook(bookFile: File): Book
+    }
+
+
+    +class CommunityView {
+        -addBookButton: JButton
+        -bookGenreInput: JTextField
+        ' need to upload the book somehow
+
+        +CommunityView()
+        +displayUsers(): void
+        +displayDescription(): void
 
     +class CreateGroupView {
         -groupNameInput: JTextField
@@ -92,6 +131,7 @@ package presentation {
 
         +displayError(): void
         +displaySuccess(): void
+
     }
 
     +class CreateGroupController {
@@ -138,8 +178,9 @@ package presentation {
 }
 
 package domain {
+
     package authenticate {
-        package creditialData {
+        package credentialData {
             +class User {
                 -userid: String
                 -username: String
@@ -239,6 +280,43 @@ package domain {
         }
     }
 
+
+    package book {
+    ' REMMEBER TO ADD DEPENDENCIES LATER
+    ' also edit user in authentication class
+    ' also edit the presentation package
+        +class UserDetails {
+            -bookLibrary: List<Book>
+            -bookGroups: List<BookGroup>
+
+            +UserDetails()
+            +addBook(book: Book): boolean
+            +joinBookGroup(bookGroup: BookGroup): boolean
+        }
+
+        +class Book {
+            -genre: Genre
+            -totalPages: int
+            -pagesRead: int
+            -starReview: int
+            -writtenReview: String
+            bookFile: File
+
+            +Book(bookFile: File, genre: Genre, totalPages: int)
+        }
+
+        +enum Genre {
+            ACTION
+            FICTION
+            HISTORICAL
+            HORROR
+            MYSTERY
+            NON-FICTION
+            ROMANCE
+            SCIENCE_FICTION
+        }
+}
+
     package bookGroup {
         +class BookGroup {
             -groupId: String
@@ -301,7 +379,7 @@ package domain {
             +getErrorMessage(): String
         }
     }
-}
+
 
 package datasource {
     package dto {
@@ -409,7 +487,7 @@ RegistrationData --> InputValidationResult
 RegistrationData -u-> User
 SecureUser -u-> User
 SecureUser --> LoginCredentials
-
+UserDetails --> "*" Book
 BookGroupService --> CreateGroupResult
 BookGroupService --> JoinGroupResult
 CreateGroupData --> InputValidationResult
@@ -431,5 +509,11 @@ LoginController ..> LoginCredentials
 LoginController ..> AuthenticationResult
 RegisterController ..> RegistrationData
 RegisterController ..> RegistrationResult
+BookController --> UserDetails
+BookController --> Book
+BookController --> BookGroup
+
+User --> UserDetails
+
 
 @enduml
