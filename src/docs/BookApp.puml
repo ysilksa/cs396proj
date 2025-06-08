@@ -1,12 +1,522 @@
 @startuml
 
 package presentation {
+    +class Main {
+        +{static}main(args: String[]): void
+    }
+
+    +class HomeScreenView {
+        +HomeScreenView()
+    }
+
+    +class HomeScreenController {
+        -view: HomeScreenView
+
+        +HomeScreenController(view: HomeScreenView)
+    }
+
+    +class LoginView {
+        -usernameInput: JTextField
+        -passwordInput: JPasswordField
+        -submitButton: JButton
+        -errorLabel: JLabel
+
+        +LoginView()
+
+        +show(): void
+        +hide(): void
+        +displayIncorrectUsername(): void
+        +displayIncorrectPassword(): void
+        +displaySuccess(): void
+    }
+
+    +class LoginController {
+        -view: LoginView
+        -authService: Authentication
+
+        +LoginController(view: LoginView, authService: Authentication)
+
+        ' handle login will extract the credentials & call authenticateservice
+        +handleLogin(): void
+        -extractCredentials(): LoginCredentials
+        -validateInputNotEmpty(): boolean
+    }
+
+    +class RegisterView {
+        -emailInput: JTextField
+        -usernameInput: JTextField
+        -passwordInput: JPasswordField
+        -confirmPasswordInput: JPasswordField
+        -submitButton: JButton
+        -errorLabel: JLabel
+
+        +RegisterView()
+
+        +show(): void
+        +hide(): void
+        +displayIncorrectUsername(): void
+        +displayIncorrectPassword(): void
+        +displaySuccess(): void
+    }
+
+    +class RegisterController {
+        -view: RegisterView
+        -authService: Authentication
+
+        +RegisterController(view: RegisterView, authService: Authentication)
+
+        +handleRegistration(): void
+        -extractRegistrationData(): RegistrationData
+        -validateInputNotEmpty(): boolean
+        -validatePasswordsMatch(): boolean
+    }
+
+    +class ProfileView {
+        +ProfileView()
+    }
+
+    +class ProfileController {
+        -model: User
+        -view: ProfileView
+
+        +ProfileController(view: ProfileView)
+    }
+
+
+    +class BookView {
+        -uploadBookButton: JButton
+        -submitButton: JButton
+        -bookFileChooser: JFileChooser
+        -bookGenreChooser: JComboBox<Genre>
+        -errorLabel: JLabel
+
+        +BookView()
+
+        +displayAvailableBooks(books: List<Book>): void
+        +addSubmitListener(listener: ActionListener): void
+        +displayError(): void
+        +show(): void
+        +hide(): void
+    }
+
+    +class BookController {
+        -view: BookView
+        -userDetails: UserDetails
+        -currentGroup: BookGroup
+
+        +BookController(view: BookView, userDetails: UserDetails, group: BookGroup)
+
+        +handleAddBook(): void
+        -uploadBook(bookFile: File): Book
+    }
+
+
+    +class CommunityView {
+        -addBookButton: JButton
+        -bookGenreInput: JTextField
+        ' need to upload the book somehow
+
+        +CommunityView()
+        +displayUsers(): void
+        +displayDescription(): void
+
+    }
+
+    +class CreateGroupView {
+            -groupNameInput: JTextField
+            -descriptionInput: JTextArea
+            -createButton: JButton
+            -cancelButton: JButton
+            -errorLabel: JLabel
+
+            +CreateGroupView()
+
+            +displayError(): void
+            +displaySuccess(): void
+
+    }
+
+    +class CreateGroupController {
+        -view: CreateGroupView
+        -bookGroupService: BookGroupService
+        -currentUser: User
+
+        +CreateGroupController(view: CreateGroupView, bookGroupService: BookGroupService)
+
+        +setCurrentUser(user: User): void
+        +handleCreateGroup(): void
+        +handleCancel(): void
+        -extractGroupData(): CreateGroupData
+        -validateInputNotEmpty(): boolean
+    }
+
+    +class GroupDetailsView {
+        -groupNameLabel: JLabel
+        -descriptionLabel: JLabel
+        -joinButton: JButton
+        -memberCountLabel: JLabel
+
+        +GroupDetailsView()
+
+        +show(): void
+        +hide(): void
+        +displayGroupDetails(group: BookGroup): void
+        +displayJoinSuccess(): void
+        +displayError(message: String): void
+    }
+
+    +class GroupDetailsController {
+        -view: GroupDetailsView
+        -bookGroupService: BookGroupService
+        -currentUser: User
+        -currentGroup: BookGroup
+
+        +GroupDetailsController(view: GroupDetailsView, bookGroupService: BookGroupService)
+
+        +setCurrentUser(user: User): void
+        +setCurrentGroup(group: BookGroup): void
+        +handleJoinGroup(): void
+    }
 }
 
 package domain {
+
+    package authenticate {
+        package credentialData {
+            +class User {
+                -userid: String
+                -username: String
+                -email: String
+
+                +User(userId: String, email: String, username: String)
+
+                +matches(credentials: LoginCredentials): boolean
+                +hashCode(): int
+            }
+
+            +class SecureUser {
+                -user: User
+                -passwordHash: String
+                -salt: String
+
+                +SecureUser(user: User, passwordHash: String, salt: String)
+
+                +authenticateWith(credentials: LoginCredentials): boolean
+                +getUser(): User
+            }
+
+            +class LoginCredentials {
+                -username: String
+                -password: String
+
+                +LoginCredentials(username: String, password: String)
+
+                +validateFormat(): InputValidationResult
+                +hashWith(salt: String): String
+            }
+
+            +class RegistrationData {
+                -email: String
+                -username: String
+                -password: String
+
+                +RegistrationData(email: String, username: String, password: String)
+
+                +validateFormat(): InputValidationResult
+                +toUser(): User
+            }
+        }
+
+        +class Authentication {
+            -userData: UserData
+            -passwordEncoder: PasswordEncoder
+
+            +Authentication(userData: UserData, passwordEncoder: PasswordEncoder)
+
+            +authenticate(credentials: LoginCredentials): AuthenticationResult
+            +register(registrationData: RegistrationData): RegistrationResult
+
+            -validateRegistrationData(data: RegistrationData): InputValidationResult
+            -checkUserExists(username: String, email: String): boolean
+            -createSecureUser(data: RegistrationData): SecureUser
+        }
+
+        +class PasswordEncoder {
+            +generateSalt(): String
+            +hash(password: String, salt: String): String
+            +verify(password: String, salt: String, hashedPassword: String): boolean
+        }
+
+        +class InputValidationResult {
+            -isValid: boolean
+            -errorMessage: String
+
+            +InputValidationResult(isValid: boolean, errorMessage: String)
+
+            +isValid(): boolean
+            +getErrorMessage(): String
+        }
+
+        +class AuthenticationResult {
+            -success: boolean
+            -user: User
+            -errorMessage: String
+
+            +AuthenticationResult(success: boolean, user: User, errorMessage: String)
+
+            +isSuccess(): boolean
+            +getUser(): User
+            +getErrorMessage(): String
+        }
+
+        +class RegistrationResult {
+            -success: boolean
+            -user: User
+            -errorMessage: String
+
+            +RegistrationResult(success: boolean, user: User, errorMessage: String)
+
+            +isSuccess(): boolean
+            +getUser(): User
+            +getErrorMessage(): String
+        }
+    }
+
+
+    package book {
+    ' REMMEBER TO ADD DEPENDENCIES LATER
+    ' also edit user in authentication class
+    ' also edit the presentation package
+        +class UserDetails {
+            -bookLibrary: List<Book>
+            -bookGroups: List<BookGroup>
+
+            +UserDetails()
+            +addBook(book: Book): boolean
+            +joinBookGroup(bookGroup: BookGroup): boolean
+        }
+
+        +class Book {
+            -genre: Genre
+            -totalPages: int
+            -pagesRead: int
+            -starReview: int
+            -writtenReview: String
+            -bookFile: File
+
+            +Book(bookFile: File, genre: Genre, totalPages: int)
+        }
+
+        +enum Genre {
+            ACTION
+            FICTION
+            HISTORICAL
+            HORROR
+            MYSTERY
+            NON-FICTION
+            ROMANCE
+            SCIENCE_FICTION
+        }
+    }
+
+    package bookGroup {
+        +class BookGroup {
+            -groupId: String
+            -groupName: String
+            -description: String
+            -creatorId: String
+            -memberIds: List<String>
+            -createdDate: Date
+
+            +BookGroup(groupId: String, groupName: String, description: String, creatorId: String)
+
+            +addMember(userId: String): void
+            +removeMember(userId: String): void
+            +isMember(userId: String): boolean
+        }
+
+        +class CreateGroupData {
+            -groupName: String
+            -description: String
+
+            +CreateGroupData(groupName: String, description: String)
+
+            +validateFormat(): InputValidationResult
+            +getGroupName(): String
+            +getDescription(): String
+        }
+
+        +class BookGroupService {
+            -bookGroupData: BookGroupData
+
+            +BookGroupService(bookGroupData: BookGroupData)
+
+            +getAllGroups(): List<BookGroup>
+            +createGroup(groupData: CreateGroupData, creatorId: String): CreateGroupResult
+            +joinGroup(groupId: String, userId: String): JoinGroupResult
+            -validateCreateGroupData(data: CreateGroupData): InputValidationResult
+        }
+
+        +class CreateGroupResult {
+            -success: boolean
+            -bookGroup: BookGroup
+            -errorMessage: String
+
+            +CreateGroupResult(success: boolean, bookGroup: BookGroup, errorMessage: String)
+
+            +isSuccess(): boolean
+            +getBookGroup(): BookGroup
+            +getErrorMessage(): String
+        }
+
+        +class JoinGroupResult {
+            -success: boolean
+            -bookGroup: BookGroup
+            -errorMessage: String
+
+            +JoinGroupResult(success: boolean, bookGroup: BookGroup, errorMessage: String)
+
+            +isSuccess(): boolean
+            +getBookGroup(): BookGroup
+            +getErrorMessage(): String
+        }
+    }
 }
 
+
 package datasource {
+    package dto {
+        +class UserDTO {
+            +userId: String
+            +username: String
+            +email: String
+            +passwordHash: String
+            +salt: String
+
+            +UserDTO()
+            +UserDTO(userId: String, username: String, email: String, passwordHash: String, salt: String)
+        }
+
+        +class BookGroupDTO {
+            +groupId: String
+            +groupName: String
+            +description: String
+            +creatorId: String
+            +memberIds: List<String>
+            +createdDate: String
+
+            +BookGroupDTO()
+            +BookGroupDTO(groupId: String, groupName: String, description: String, creatorId: String, memberIds: String, createdDate: String)
+        }
+    }
+
+    +interface UserData {
+        +save(userDTO: UserDTO): void
+        +findByUsername(username: String): UserDTO
+        +findByEmail(email: String): UserDTO
+        +exists(username: String, email: String): boolean
+    }
+
+    +interface BookGroupData {
+        +save(bookGroupDTO: BookGroupDTO): void
+        +findById(groupId: String): BookGroupDTO
+        +findAll(): List<BookGroupDTO>
+        +findByMemberId(userId: String): List<BookGroupDTO>
+        +update(bookGroupDTO: BookGroupDTO): void
+    }
+
+    +class ExampleUserDataBase {
+        -users: Map<String, UserDTO>
+        -usersByEmail: Map<String, UserDTO>
+
+        +ExampleUserDatabase()
+
+        +save(userDTO: UserDTO): void
+        +findByUsername(username: String): UserDTO
+        +findByEmail(email: String): UserDTO
+        +exists(username: String, email: String): boolean
+        -loadUsersFromFile(): void
+        -saveUsersToFile(): void
+    }
+
+    +class ExampleBookGroupDataBase {
+        -groups: Map<String, BookGroupDTO>
+
+        +ExampleBookGroupDatabase()
+
+        +save(bookGroupDTO: BookGroupDTO): void
+        +findById(groupId: String): BookGroupDTO
+        +findAll(): List<BookGroupDTO>
+        +findByMemberId(userId: String): List<BookGroupDTO>
+        +update(bookGroupDTO: BookGroupDTO): void
+        -loadGroupsFromFile(): void
+        -saveGroupsToFile(): void
+    }
 }
+
+' presentation dependencies
+HomeScreenView ..> Main
+LoginView ..> Main
+RegisterView ..> Main
+ProfileView ..> Main
+CreateGroupView ..> Main
+GroupDetailsView ..> Main
+
+HomeScreenController --> HomeScreenView
+HomeScreenController --> BookGroupService
+
+CreateGroupController --> CreateGroupView
+CreateGroupController --> BookGroupService
+
+GroupDetailsController --> GroupDetailsView
+GroupDetailsController --> BookGroupService
+
+LoginController --> LoginView
+LoginController --> Authentication
+
+RegisterController --> RegisterView
+RegisterController --> Authentication
+
+ProfileController --> ProfileView
+
+' domain dependencies
+Authentication --> UserData
+Authentication --> PasswordEncoder
+Authentication --> InputValidationResult
+Authentication --> AuthenticationResult
+Authentication --> RegistrationResult
+LoginCredentials --> InputValidationResult
+RegistrationData --> InputValidationResult
+RegistrationData -u-> User
+SecureUser -u-> User
+SecureUser --> LoginCredentials
+UserDetails --> "*" Book
+BookGroupService --> CreateGroupResult
+BookGroupService --> JoinGroupResult
+CreateGroupData --> InputValidationResult
+
+' datasource dependencies
+BookGroupData --> BookGroupDTO
+UserData --> UserDTO
+
+ExampleUserDataBase ..|> UserData
+ExampleBookGroupDataBase ..|> BookGroupData
+
+' Dependencies between layers
+HomeScreenController ..> BookGroup
+CreateGroupController ..> CreateGroupData
+CreateGroupController ..> CreateGroupResult
+GroupDetailsController ..> BookGroup
+GroupDetailsController ..> JoinGroupResult
+LoginController ..> LoginCredentials
+LoginController ..> AuthenticationResult
+RegisterController ..> RegistrationData
+RegisterController ..> RegistrationResult
+BookController --> UserDetails
+BookController --> Book
+BookController --> BookGroup
+
+User --> UserDetails
+
 
 @enduml
