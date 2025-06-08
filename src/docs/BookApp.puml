@@ -82,17 +82,48 @@ package presentation {
         +ProfileController(view: ProfileView)
     }
 
+    +class RecommendBookView {
+        -bookChooser: JComboBox<Book>
+        -recipientChooser: JComboBox<String>
+        -recommendToUserButton: JButton
+        -recommendToGroupButton: JButton
+        -error: JLabel
+
+        +RecommendBookView()
+        +displaySuccess(): void
+        +displayError(): void
+    }
+
+    +class RecommendBookController {
+        -view: RecommendBookView
+        -user: User
+
+        +RecommendBookController(view: RecommendBookView, user: User)
+        +handleRecommendToUser(): void
+        +handleRecommendToGroup(): void
+    }
+
 
     +class BookView {
         -uploadBookButton: JButton
         -submitButton: JButton
         -bookFileChooser: JFileChooser
         -bookGenreChooser: JComboBox<Genre>
+        -bookStatusChooser: JComboBox<BookStatus>
+        -bookProgressInput: JLabel
+        -bookNumStarsInput: JComboBox<int>
+        -bookReviewInput: JLabel
         -errorLabel: JLabel
 
         +BookView()
 
         +displayAvailableBooks(books: List<Book>): void
+        +displayBookProgress(): void
+        +displayBookProgressSuccess(): void
+        +displayBookStatus(): void
+        +displayBookStatusSuccess(): void
+        +displayBookReview(): void
+        +displayReviewSuccess(): void
         +addSubmitListener(listener: ActionListener): void
         +displayError(): void
         +show(): void
@@ -108,6 +139,9 @@ package presentation {
 
         +handleAddBook(): void
         -uploadBook(bookFile: File): Book
+        +handleUpdateBookProgress(numPagesRead: int): void
+        +handleUpdateBookStatus(bookStatus: BookStatus): void
+        +handleAddReview(stars: int, review: String): void
     }
 
 
@@ -161,6 +195,7 @@ package presentation {
         +show(): void
         +hide(): void
         +displayGroupDetails(group: BookGroup): void
+        +displayGroupLibrary(): void
         +displayJoinSuccess(): void
         +displayError(message: String): void
     }
@@ -170,12 +205,14 @@ package presentation {
         -bookGroupService: BookGroupService
         -currentUser: User
         -currentGroup: BookGroup
+        -groupLibrary: List<Book>
 
         +GroupDetailsController(view: GroupDetailsView, bookGroupService: BookGroupService)
 
         +setCurrentUser(user: User): void
         +setCurrentGroup(group: BookGroup): void
         +handleJoinGroup(): void
+        +handleDisplayGroupLibrary(): void
     }
 }
 
@@ -294,6 +331,7 @@ package domain {
             +UserDetails()
             +addBook(book: Book): boolean
             +joinBookGroup(bookGroup: BookGroup): boolean
+            +recommendBook(book: Book): boolean
         }
 
         +class Book {
@@ -303,8 +341,20 @@ package domain {
             -starReview: int
             -writtenReview: String
             -bookFile: File
+            -bookStatus: BookStatus
+            -bookReview: BookReview
 
             +Book(bookFile: File, genre: Genre, totalPages: int)
+            +addReview(stars: int): boolean
+            +addReview(stars: int, review: String): boolean
+            +addProgress(currPages: int): boolean
+        }
+
+        +class BookReview {
+            -numStars: int
+            -review: String
+
+            +BookReview(numStars: int, review: String)
         }
 
         +enum Genre {
@@ -317,6 +367,21 @@ package domain {
             ROMANCE
             SCIENCE_FICTION
         }
+
+        +enum BookStatus {
+            WANT_TO_READ
+            READING
+            READ
+        }
+    }
+
+    +class RecommendationService {
+        -userData: User
+        -groupData: BookGroup
+
+        +RecommendationService(user: User, bookGroup: BookGroup)
+        +recommendToUser(sender: User, recipient: String, book: Book): boolean
+        +recommendToUser(sender: User, recipient: String, book: Book): boolean
     }
 
     package bookGroup {
@@ -327,12 +392,14 @@ package domain {
             -creatorId: String
             -memberIds: List<String>
             -createdDate: Date
+            -groupLibrary: List<Book>
 
             +BookGroup(groupId: String, groupName: String, description: String, creatorId: String)
 
             +addMember(userId: String): void
             +removeMember(userId: String): void
             +isMember(userId: String): boolean
+            +addBookToLibrary(book: Book): boolean
         }
 
         +class CreateGroupData {
@@ -479,6 +546,10 @@ RegisterController --> Authentication
 
 ProfileController --> ProfileView
 
+RecommendBookController --> RecommendBookView
+RecommendBookController --> RecommendationService
+RecommendBookController --> User
+
 ' domain dependencies
 Authentication --> UserData
 Authentication --> PasswordEncoder
@@ -491,6 +562,8 @@ RegistrationData -u-> User
 SecureUser -u-> User
 SecureUser --> LoginCredentials
 UserDetails --> "*" Book
+RecommendationService --> UserDetails
+RecommendationService --> BookGroup
 BookGroupService --> CreateGroupResult
 BookGroupService --> JoinGroupResult
 CreateGroupData --> InputValidationResult
