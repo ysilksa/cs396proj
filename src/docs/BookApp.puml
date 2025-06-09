@@ -138,6 +138,8 @@ package presentation {
         +BookController(view: BookView, userDetails: UserDetails, group: BookGroup)
 
         +handleAddBook(): void
+        +handleEditBook(updatedBook: Book): void
+        +handleRemoveBook(book: Book): void
         -uploadBook(bookFile: File): Book
         +handleUpdateBookProgress(numPagesRead: int): void
         +handleUpdateBookStatus(bookStatus: BookStatus): void
@@ -332,6 +334,8 @@ package domain {
             +addBook(book: Book): boolean
             +joinBookGroup(bookGroup: BookGroup): boolean
             +recommendBook(book: Book): boolean
+            +editBook(updatedBook: Book): boolean
+            +removeBook(book: Book): boolean
         }
 
         +class Book {
@@ -348,6 +352,7 @@ package domain {
             +addReview(stars: int): boolean
             +addReview(stars: int, review: String): boolean
             +addProgress(currPages: int): boolean
+            +updateDetails(newGenre: Genre, newTotalPages: int): void
         }
 
         +class BookReview {
