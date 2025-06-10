@@ -146,18 +146,6 @@ package presentation {
         +handleAddReview(stars: int, review: String): void
     }
 
-
-    +class CommunityView {
-        -addBookButton: JButton
-        -bookGenreInput: JTextField
-        ' need to upload the book somehow
-
-        +CommunityView()
-        +displayUsers(): void
-        +displayDescription(): void
-
-    }
-
     +class CreateGroupView {
             -groupNameInput: JTextField
             -descriptionInput: JTextArea
@@ -581,34 +569,50 @@ RegisterView ..> Main
 ProfileView ..> Main
 CreateGroupView ..> Main
 GroupDetailsView ..> Main
+BookView ..> Main
+BookDiscussionView ..> Main
 
 HomeScreenController --> HomeScreenView
 HomeScreenController --> BookGroupService
 
-CreateGroupController --> CreateGroupView
-CreateGroupController --> BookGroupService
-
-GroupDetailsController --> GroupDetailsView
-GroupDetailsController --> BookGroupService
-
 LoginController --> LoginView
 LoginController --> Authentication
+LoginController ..> LoginCredentials
+LoginController ..> AuthenticationResult
 
 RegisterController --> RegisterView
 RegisterController --> Authentication
+RegisterController ..> RegistrationData
+RegisterController ..> RegistrationResult
 
 ProfileController --> ProfileView
-
+ProfileController --> User
 
 BookController --> BookView
+BookController --> UserDetails
+BookController --> Book
+BookController --> BookGroup
 
 RecommendBookController --> RecommendBookView
 RecommendBookController --> RecommendationService
 RecommendBookController --> User
 
+CreateGroupController --> CreateGroupView
+CreateGroupController --> BookGroupService
+CreateGroupController --> User
+CreateGroupController ..> CreateGroupData
+CreateGroupController ..> CreateGroupResult
+
+GroupDetailsController --> GroupDetailsView
+GroupDetailsController --> BookGroupService
+GroupDetailsController --> User
+GroupDetailsController ..> BookGroup
+GroupDetailsController ..> JoinGroupResult
+
 BookDiscussionController --> BookDiscussionView
 BookDiscussionController --> User
 BookDiscussionController --> BookGroup
+BookDiscussionController --> BookDiscussion
 
 ' domain dependencies
 Authentication --> UserData
@@ -616,26 +620,52 @@ Authentication --> PasswordEncoder
 Authentication --> InputValidationResult
 Authentication --> AuthenticationResult
 Authentication --> RegistrationResult
-LoginCredentials --> InputValidationResult
-RegistrationData --> InputValidationResult
-RegistrationData -u-> User
+
 SecureUser -u-> User
 SecureUser --> LoginCredentials
+
+LoginCredentials --> InputValidationResult
+
+RegistrationData --> InputValidationResult
+RegistrationData -u-> User
+
+User --> UserDetails
+
+AuthenticationResult --> User
+RegistrationResult --> User
+
 UserDetails --> "*" Book
-RecommendationService --> UserDetails
-RecommendationService --> BookGroup
-RecommendationService --> User
+UserDetails --> BookGroup
+
+Book --> Genre
+Book --> BookStatus
 Book --> BookReview
-BookGroupService --> CreateGroupResult
-BookGroupService --> JoinGroupResult
-CreateGroupData --> InputValidationResult
+
 BookGroup --> "*" BookDiscussion
 BookGroup --> "*" Book
+
 BookDiscussion --> "*" DiscussionComment
 BookDiscussion --> User
 BookDiscussion --> Book
+
 DiscussionComment --> User
 DiscussionComment --> Book
+
+BookGroupService --> BookGroupData
+BookGroupService --> CreateGroupData
+BookGroupService --> CreateGroupResult
+BookGroupService --> JoinGroupResult
+BookGroupService --> BookGroup
+
+CreateGroupData --> InputValidationResult
+
+CreateGroupResult --> BookGroup
+JoinGroupResult --> BookGroup
+
+RecommendationService --> UserDetails
+RecommendationService --> BookGroup
+RecommendationService --> User
+RecommendationService --> Book
 
 ' datasource dependencies
 BookGroupData --> BookGroupDTO
@@ -643,24 +673,4 @@ UserData --> UserDTO
 
 ExampleUserDataBase ..|> UserData
 ExampleBookGroupDataBase ..|> BookGroupData
-
-' Dependencies between layers
-HomeScreenController ..> BookGroup
-ProfileController --> User
-CreateGroupController ..> CreateGroupData
-CreateGroupController ..> CreateGroupResult
-GroupDetailsController ..> BookGroup
-GroupDetailsController ..> JoinGroupResult
-LoginController ..> LoginCredentials
-LoginController ..> AuthenticationResult
-RegisterController ..> RegistrationData
-RegisterController ..> RegistrationResult
-BookController --> UserDetails
-BookController --> Book
-BookController --> BookGroup
-BookDiscussionController --> BookGroup
-User --> UserDetails
-
-
-
 @enduml
