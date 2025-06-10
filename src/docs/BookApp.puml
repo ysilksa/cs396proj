@@ -1,5 +1,4 @@
 @startuml
-
 package presentation {
     +class Main {
         +{static}main(args: String[]): void

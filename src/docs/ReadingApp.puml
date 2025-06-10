@@ -1,0 +1,413 @@
+@startuml
+package presentation {
+    +class Main {
+        +{static}main(args: String[]): void
+    }
+
+    +class LoginView {
+        -usernameInput: JTextField
+        -passwordInput: JPasswordField
+        -submitButton: JButton
+        -errorLabel: JLabel
+
+        +LoginView()
+
+        +show(): void
+        +hide(): void
+        +displayIncorrectUsername(): void
+        +displayIncorrectPassword(): void
+        +displaySuccess(): void
+    }
+
+    +class LoginController {
+        -view: LoginView
+        -authService: Authentication
+
+        +LoginController(view: LoginView, authService: Authentication)
+
+        ' handle login will extract the credentials & call authenticateservice
+        +handleLogin(): void
+        -extractCredentials(): LoginCredentials
+        -validateInputNotEmpty(): boolean
+    }
+
+    +class RegisterView {
+        -emailInput: JTextField
+        -usernameInput: JTextField
+        -passwordInput: JPasswordField
+        -confirmPasswordInput: JPasswordField
+        -submitButton: JButton
+        -errorLabel: JLabel
+
+        +RegisterView()
+
+        +show(): void
+        +hide(): void
+        +displayIncorrectUsername(): void
+        +displayIncorrectPassword(): void
+        +displaySuccess(): void
+    }
+
+    +class RegisterController {
+        -view: RegisterView
+        -authService: Authentication
+
+        +RegisterController(view: RegisterView, authService: Authentication)
+
+        +handleRegistration(): void
+        -extractRegistrationData(): RegistrationData
+        -validateInputNotEmpty(): boolean
+        -validatePasswordsMatch(): boolean
+    }
+
+    +class ProfileController {
+        -model: User
+        -view: ProfileView
+
+        +ProfileController(view: ProfileView)
+    }
+
+    +class RecommendBookView {
+        -bookChooser: JComboBox<Book>
+        -recipientChooser: JComboBox<String>
+        -recommendToUserButton: JButton
+        -recommendToGroupButton: JButton
+        -error: JLabel
+
+        +RecommendBookView()
+        +displaySuccess(): void
+        +displayError(): void
+    }
+
+    +class RecommendBookController {
+        -view: RecommendBookView
+        -user: User
+
+        +RecommendBookController(view: RecommendBookView, user: User)
+        +handleRecommendToUser(): void
+        +handleRecommendToGroup(): void
+    }
+
+    +class BookView {
+        -uploadBookButton: JButton
+        -submitButton: JButton
+        -bookFileChooser: JFileChooser
+        -bookGenreChooser: JComboBox<Genre>
+        -bookStatusChooser: JComboBox<BookStatus>
+        -bookProgressInput: JLabel
+        -bookNumStarsInput: JComboBox<int>
+        -bookReviewInput: JLabel
+        -errorLabel: JLabel
+        -openVirtualReaderButton: JButton
+
+        +BookView()
+
+        +displayAvailableBooks(books: List<Book>): void
+        +displayBookProgress(): void
+        +displayBookProgressSuccess(): void
+        +displayBookStatus(): void
+        +displayBookStatusSuccess(): void
+        +displayBookReview(): void
+        +displayReviewSuccess(): void
+        +openVirtualReader(): void
+        +displayError(): void
+        +show(): void
+        +hide(): void
+    }
+
+    +class BookController {
+        -view: BookView
+        -userDetails: UserDetails
+        -currentGroup: BookGroup
+        -bookReader: BookReader
+
+        +BookController(view: BookView, userDetails: UserDetails, group: BookGroup)
+
+        +handleAddBook(): void
+        +handleEditBook(updatedBook: Book): void
+        +handleRemoveBook(book: Book): void
+        -uploadBook(bookFile: File): Book
+        +handleUpdateBookProgress(numPagesRead: int): void
+        +handleUpdateBookStatus(bookStatus: BookStatus): void
+        +handleAddReview(stars: int, review: String): void
+        +handleOpenVirtualReader(book: Book): void
+    }
+
+    +class CreateGroupView {
+            -groupNameInput: JTextField
+            -descriptionInput: JTextArea
+            -createButton: JButton
+            -cancelButton: JButton
+            -errorLabel: JLabel
+
+            +CreateGroupView()
+
+            +displayError(): void
+            +displaySuccess(): void
+
+    }
+
+    +class CreateGroupController {
+        -view: CreateGroupView
+        -bookGroupService: BookGroupService
+        -currentUser: User
+
+        +CreateGroupController(view: CreateGroupView, bookGroupService: BookGroupService)
+
+        +setCurrentUser(user: User): void
+        +handleCreateGroup(): void
+        +handleCancel(): void
+        -extractGroupData(): CreateGroupData
+        -validateInputNotEmpty(): boolean
+    }
+
+    +class GroupDetailsView {
+        -groupNameLabel: JLabel
+        -descriptionLabel: JLabel
+        -joinButton: JButton
+        -memberCountLabel: JLabel
+        -statisticsButton: JButton
+
+        +GroupDetailsView()
+
+        +show(): void
+        +hide(): void
+        +displayGroupDetails(group: BookGroup): void
+        +displayGroupLibrary(): void
+        +displayJoinSuccess(): void
+        +displayError(message: String): void
+    }
+
+    +class GroupDetailsController {
+        -view: GroupDetailsView
+        -bookGroupService: BookGroupService
+        -currentUser: User
+        -currentGroup: BookGroup
+        -groupLibrary: List<Book>
+
+        +GroupDetailsController(view: GroupDetailsView, bookGroupService: BookGroupService)
+
+        +setCurrentUser(user: User): void
+        +setCurrentGroup(group: BookGroup): void
+        +handleJoinGroup(): void
+        +handleDisplayGroupLibrary(): void
+    }
+
+    +class BookDiscussionView {
+        -postContentField: JTextArea
+        -submitPostButton: JButton
+        -selectBookDropdown: JComboBox<Book>
+        -discussionList: JList<BookDiscussion>
+        -commentContentField: JTextArea
+        -submitCommentButton: JButton
+        -errorLabel: JLabel
+
+        +BookDiscussionView()
+        +displayDiscussions(discussions: List<BookDiscussion>): void
+        +displayPostSuccess(): void
+        +displayCommentSuccess(): void
+        +displayError(message: String): void
+    }
+
+    +class BookDiscussionController {
+        -view: BookDiscussionView
+        -user: User
+        -group: BookGroup
+
+        +BookDiscussionController(view: BookDiscussionView, user: User, group: BookGroup)
+        +handlePostDiscussion(): void
+        +handleAddComment(discussion: BookDiscussion): void
+    }
+
+    +class GroupStatisticsView {
+        -totalBooksLabel: JLabel
+        -popularGenresPanel: JPanel
+        -popularBooksList: JList<Book>
+        -selectBookButton: JButton
+        -errorLabel: JLabel
+
+        +GroupStatisticsView()
+        +displayStatistics(stats: GroupStatistics): void
+        +displayError(message: String): void
+        +displayBookSelectionSuccess(): void
+        +show(): void
+        +hide(): void
+    }
+
+    +class GroupStatisticsController {
+        -view: GroupStatisticsView
+        -statisticsService: GroupStatisticsService
+        -currentUser: User
+        -currentGroup: BookGroup
+
+        +GroupStatisticsController(view: GroupStatisticsView, statisticsService: GroupStatisticsService)
+        +setCurrentUser(user: User): void
+        +setCurrentGroup(group: BookGroup): void
+        +handleViewStatistics(): void
+        +handleSelectBook(book: Book): void
+        -isBookAvailable(book: Book): boolean
+    }
+
+    +class CommunityGoalsView {
+        -viewGoalsButton: JButton
+        -setBooksCountInput: JSpinner
+        -bookSelector1: JComboBox<Book>
+        -bookSelector2: JComboBox<Book>
+        -bookSelector3: JComboBox<Book>
+        -setGoalButton: JButton
+        -warningLabel: JLabel
+        -successLabel: JLabel
+
+        +CommunityGoalsView()
+        +displayWarningBookNotInLibrary(): void
+        +displaySuccess(): void
+        +showAdminControls(isAdmin: boolean): void
+    }
+
+    +class CommunityGoalsController {
+        -view: CommunityGoalsView
+        -goalsService: CommunityGoalsService
+        -currentUser: User
+        -currentGroup: BookGroup
+
+        +CommunityGoalsController(view: CommunityGoalsView, goalsService: CommunityGoalsService)
+        +handleViewGoals(): void
+        +handleSetGoal(): void
+        -isUserAdmin(): boolean
+        -validateGoalData(): boolean
+    }
+
+    +class VirtualReaderView {
+        -bookDisplayPanel: JPanel
+        -currentPageLabel: JLabel
+        -totalPagesLabel: JLabel
+        -previousPageButton: JButton
+        -nextPageButton: JButton
+        -pageNumberInput: JTextField
+        -goToPageButton: JButton
+        -closeBookButton: JButton
+        -bookContentArea: JTextArea
+        -progressBar: JProgressBar
+
+        +VirtualReaderView()
+        +displayBook(book: Book, currentPage: int): void
+        +updatePageDisplay(currentPage: int, totalPages: int): void
+        +displayBookContent(content: String): void
+        +updateProgressBar(progress: double): void
+        +show(): void
+        +hide(): void
+    }
+
+    +class VirtualReaderController {
+        -view: VirtualReaderView
+        -bookReader: BookReader
+        -currentSession: ReadingSession
+        -currentUser: User
+
+        +VirtualReaderController(view: VirtualReaderView, bookReader: BookReader)
+        +setCurrentUser(user: User): void
+        +handleOpenBook(book: Book): void
+        +handlePageNavigation(newPage: int): void
+        +handlePreviousPage(): void
+        +handleNextPage(): void
+        +handleGoToPage(): void
+        +handleCloseBook(): void
+        -validatePageNumber(pageNumber: int): boolean
+        -updateViewWithCurrentPage(): void
+    }
+}
+LoginView ..> Main
+RegisterView ..> Main
+CreateGroupView ..> Main
+GroupDetailsView ..> Main
+BookView ..> Main
+RecommendBookView ..> Main
+BookDiscussionView ..> Main
+GroupStatisticsView ..> Main
+CommunityGoalsView ..> Main
+VirtualReaderView ..> Main
+
+LoginController --> LoginView
+RegisterController --> RegisterView
+BookController --> BookView
+RecommendBookController --> RecommendBookView
+CreateGroupController --> CreateGroupView
+GroupDetailsController --> GroupDetailsView
+BookDiscussionController --> BookDiscussionView
+GroupStatisticsController --> GroupStatisticsView
+CommunityGoalsController --> CommunityGoalsView
+VirtualReaderController --> VirtualReaderView
+
+package domain
+{
+    +interface AuthenticationService {
+        +authenticate(credentials: LoginCredentials): AuthenticationResult
+        +register(data: RegistrationData): RegistrationResult
+        +logout(userId: String): void
+    }
+
+    +interface BookService {
+        +addBook(book: Book): BookResult
+        +updateBook(book: Book): BookResult
+        +deleteBook(bookId: String): BookResult
+        +searchBooks(criteria: SearchCriteria): List<Book>
+        +getBooksByUser(userId: String): List<Book>
+    }
+
+    +interface BookGroupService {
+        +createGroup(groupData: CreateGroupData): GroupResult
+        +joinGroup(groupId: String, userId: String): GroupResult
+        +leaveGroup(groupId: String, userId: String): GroupResult
+        +getGroupsByUser(userId: String): List<BookGroup>
+        +getGroupDetails(groupId: String): BookGroup
+    }
+
+    +interface ReadingProgressService {
+        +updateProgress(userId: String, bookId: String, progress: int): void
+        +getProgress(userId: String, bookId: String): ReadingProgress
+        +getReadingStatistics(userId: String): ReadingStatistics
+    }
+
+    +interface VirtualReaderService {
+        +openBook(book: Book, user: User): ReadingSession
+        +navigateToPage(sessionId: String, pageNumber: int): PageContent
+        +saveProgress(sessionId: String): void
+        +closeBook(sessionId: String): void
+    }
+
+    +interface DiscussionService {
+        +createDiscussion(groupId: String, userId: String, content: String, book: Book): DiscussionResult
+        +addComment(discussionId: String, userId: String, content: String): CommentResult
+        +getDiscussions(groupId: String): List<BookDiscussion>
+    }
+
+    package entities
+    {
+        +class User {
+        }
+
+        +class Book {
+        }
+
+        +class BookGroup {
+        }
+
+        +class ReadingSession {
+        }
+
+        +class BookDiscussion {
+        }
+    }
+
+    package objects
+    {
+    }
+
+    package services
+    {
+    }
+}
+package datasource
+{
+}
+@enduml
