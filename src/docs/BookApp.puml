@@ -103,7 +103,6 @@ package presentation {
         +handleRecommendToGroup(): void
     }
 
-
     +class BookView {
         -uploadBookButton: JButton
         -submitButton: JButton
@@ -179,6 +178,7 @@ package presentation {
         -descriptionLabel: JLabel
         -joinButton: JButton
         -memberCountLabel: JLabel
+        -statisticsButton: JButton
 
         +GroupDetailsView()
 
@@ -231,6 +231,34 @@ package presentation {
         +handleAddComment(discussion: BookDiscussion): void
     }
 
+    +class GroupStatisticsView {
+        -totalBooksLabel: JLabel
+        -popularGenresPanel: JPanel
+        -popularBooksList: JList<Book>
+        -selectBookButton: JButton
+        -errorLabel: JLabel
+
+        +GroupStatisticsView()
+        +displayStatistics(stats: GroupStatistics): void
+        +displayError(message: String): void
+        +displayBookSelectionSuccess(): void
+        +show(): void
+        +hide(): void
+    }
+
+    +class GroupStatisticsController {
+        -view: GroupStatisticsView
+        -statisticsService: GroupStatisticsService
+        -currentUser: User
+        -currentGroup: BookGroup
+
+        +GroupStatisticsController(view: GroupStatisticsView, statisticsService: GroupStatisticsService)
+        +setCurrentUser(user: User): void
+        +setCurrentGroup(group: BookGroup): void
+        +handleViewStatistics(): void
+        +handleSelectBook(book: Book): void
+        -isBookAvailable(book: Book): boolean
+    }
 }
 
 package domain {
@@ -489,6 +517,33 @@ package domain {
             +getErrorMessage(): String
         }
     }
+
+    package readingStats
+    {
+        +class GroupStatistics {
+            -totalBooksRead: int
+            -popularGenres: Map<Genre, Integer>
+            -popularBooks: List<Book>
+            -groupId: String
+
+            +GroupStatistics(groupId: String, totalBooksRead: int, popularGenres: Map<Genre, Integer>, popularBooks: List<Book>)
+            +getTotalBooksRead(): int
+            +getPopularGenres(): Map<Genre, Integer>
+            +getPopularBooks(): List<Book>
+        }
+
+        +class GroupStatisticsService {
+            -bookGroupData: BookGroupData
+            -userData: UserData
+
+            +GroupStatisticsService(bookGroupData: BookGroupData, userData: UserData)
+            +generateGroupStatistics(groupId: String): GroupStatistics
+            +isBookAvailableToUser(book: Book, user: User, group: BookGroup): boolean
+            -calculateTotalBooksRead(groupId: String): int
+            -calculatePopularGenres(groupId: String): Map<Genre, Integer>
+            -calculatePopularBooks(groupId: String): List<Book>
+        }
+    }
 }
 
 
@@ -571,6 +626,7 @@ CreateGroupView ..> Main
 GroupDetailsView ..> Main
 BookView ..> Main
 BookDiscussionView ..> Main
+GroupStatisticsView ..> Main
 
 HomeScreenController --> HomeScreenView
 HomeScreenController --> BookGroupService
@@ -613,6 +669,12 @@ BookDiscussionController --> BookDiscussionView
 BookDiscussionController --> User
 BookDiscussionController --> BookGroup
 BookDiscussionController --> BookDiscussion
+
+GroupStatisticsController --> GroupStatisticsView
+GroupStatisticsController --> GroupStatisticsService
+GroupStatisticsController --> User
+GroupStatisticsController --> BookGroup
+GroupStatisticsController ..> GroupStatistics
 
 ' domain dependencies
 Authentication --> UserData
@@ -666,6 +728,16 @@ RecommendationService --> UserDetails
 RecommendationService --> BookGroup
 RecommendationService --> User
 RecommendationService --> Book
+
+GroupStatisticsService --> BookGroupData
+GroupStatisticsService --> UserData
+GroupStatisticsService --> GroupStatistics
+GroupStatisticsService --> BookGroup
+GroupStatisticsService --> User
+GroupStatisticsService --> Book
+
+GroupStatistics --> "*" Genre
+GroupStatistics --> "*" Book
 
 ' datasource dependencies
 BookGroupData --> BookGroupDTO
