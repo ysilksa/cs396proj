@@ -113,6 +113,7 @@ package presentation {
         -bookNumStarsInput: JComboBox<int>
         -bookReviewInput: JLabel
         -errorLabel: JLabel
+        -openVirtualReaderButton: JButton
 
         +BookView()
 
@@ -123,7 +124,7 @@ package presentation {
         +displayBookStatusSuccess(): void
         +displayBookReview(): void
         +displayReviewSuccess(): void
-        +addSubmitListener(listener: ActionListener): void
+        +openVirtualReader(): void
         +displayError(): void
         +show(): void
         +hide(): void
@@ -133,6 +134,7 @@ package presentation {
         -view: BookView
         -userDetails: UserDetails
         -currentGroup: BookGroup
+        -bookReader: BookReader
 
         +BookController(view: BookView, userDetails: UserDetails, group: BookGroup)
 
@@ -143,6 +145,7 @@ package presentation {
         +handleUpdateBookProgress(numPagesRead: int): void
         +handleUpdateBookStatus(bookStatus: BookStatus): void
         +handleAddReview(stars: int, review: String): void
+        +handleOpenVirtualReader(book: Book): void
     }
 
     +class CreateGroupView {
@@ -288,6 +291,45 @@ package presentation {
         -isUserAdmin(): boolean
         -validateGoalData(): boolean
     }
+
+    +class VirtualReaderView {
+        -bookDisplayPanel: JPanel
+        -currentPageLabel: JLabel
+        -totalPagesLabel: JLabel
+        -previousPageButton: JButton
+        -nextPageButton: JButton
+        -pageNumberInput: JTextField
+        -goToPageButton: JButton
+        -closeBookButton: JButton
+        -bookContentArea: JTextArea
+        -progressBar: JProgressBar
+
+        +VirtualReaderView()
+        +displayBook(book: Book, currentPage: int): void
+        +updatePageDisplay(currentPage: int, totalPages: int): void
+        +displayBookContent(content: String): void
+        +updateProgressBar(progress: double): void
+        +show(): void
+        +hide(): void
+    }
+
+    +class VirtualReaderController {
+        -view: VirtualReaderView
+        -bookReader: BookReader
+        -currentSession: ReadingSession
+        -currentUser: User
+
+        +VirtualReaderController(view: VirtualReaderView, bookReader: BookReader)
+        +setCurrentUser(user: User): void
+        +handleOpenBook(book: Book): void
+        +handlePageNavigation(newPage: int): void
+        +handlePreviousPage(): void
+        +handleNextPage(): void
+        +handleGoToPage(): void
+        +handleCloseBook(): void
+        -validatePageNumber(pageNumber: int): boolean
+        -updateViewWithCurrentPage(): void
+    }
 }
 
 package domain {
@@ -400,11 +442,17 @@ package domain {
             -bookGroups: List<BookGroup>
 
             +UserDetails()
+
             +addBook(book: Book): boolean
             +joinBookGroup(bookGroup: BookGroup): boolean
             +recommendBook(book: Book): boolean
             +editBook(updatedBook: Book): boolean
             +removeBook(book: Book): boolean
+
+            +getReadingProgress(bookId: String): ReadingProgress
+            +updateReadingProgress(bookId: String, progress: ReadingProgress): void
+            +getPersonalBooks(): List<Book>
+            +getGroupBooks(): List<Book>
         }
 
         +class Book {
@@ -416,6 +464,7 @@ package domain {
             -bookFile: File
             -bookStatus: BookStatus
             -bookReview: BookReview
+            -currentPage: int
 
             +Book(bookFile: File, genre: Genre, totalPages: int)
             +addReview(stars: int): boolean
@@ -505,10 +554,7 @@ package domain {
             -description: String
 
             +CreateGroupData(groupName: String, description: String)
-
             +validateFormat(): InputValidationResult
-            +getGroupName(): String
-            +getDescription(): String
         }
 
         +class BookGroupService {
@@ -528,10 +574,7 @@ package domain {
             -errorMessage: String
 
             +CreateGroupResult(success: boolean, bookGroup: BookGroup, errorMessage: String)
-
             +isSuccess(): boolean
-            +getBookGroup(): BookGroup
-            +getErrorMessage(): String
         }
 
         +class JoinGroupResult {
@@ -540,10 +583,7 @@ package domain {
             -errorMessage: String
 
             +JoinGroupResult(success: boolean, bookGroup: BookGroup, errorMessage: String)
-
             +isSuccess(): boolean
-            +getBookGroup(): BookGroup
-            +getErrorMessage(): String
         }
     }
 
@@ -555,9 +595,6 @@ package domain {
             -groupId: String
 
             +GroupStatistics(groupId: String, totalBooksRead: int, popularGenres: Map<Genre, Integer>, popularBooks: List<Book>)
-            +getTotalBooksRead(): int
-            +getPopularGenres(): Map<Genre, Integer>
-            +getPopularBooks(): List<Book>
         }
 
         +class GroupStatisticsService {
@@ -603,8 +640,47 @@ package domain {
 
             +GoalResult(success: boolean, missingBooks: List<Book>, errorMessage: String)
             +isSuccess(): boolean
-            +getMissingBooks(): List<Book>
-            +getErrorMessage(): String
+        }
+    }
+
+    package virtualReading {
+        +class ReadingSession {
+            -sessionId: String
+            -book: Book
+            -user: User
+            -currentPage: int
+            -sessionStartTime: Date
+            -lastAccessTime: Date
+
+            +ReadingSession(book: Book, user: User, startingPage: int)
+            +setCurrentPage(page: int): void
+            +updateLastAccessTime(): void
+        }
+
+        +class BookReader {
+            -readingProgressData: ReadingProgressData
+            -activeSessions: Map<String, ReadingSession>
+
+            +BookReader(readingProgressData: ReadingProgressData)
+            +openBook(book: Book, user: User): ReadingSession
+            +saveProgress(session: ReadingSession): void
+            +closeBook(session: ReadingSession): void
+            +navigateToPage(session: ReadingSession, pageNumber: int): boolean
+            -loadBookContent(book: Book, pageNumber: int): String
+            -createReadingSession(book: Book, user: User): ReadingSession
+        }
+
+        +class ReadingProgress {
+            -userId: String
+            -bookId: String
+            -lastPageRead: int
+            -totalPages: int
+            -lastReadDate: Date
+            -readingStatus: BookStatus
+
+            +ReadingProgress(userId: String, bookId: String, totalPages: int)
+            +updateProgress(pageNumber: int): void
+            +isCompleted(): boolean
         }
     }
 }
@@ -644,6 +720,18 @@ package datasource {
 
             +CommunityGoalDTO(goalId: String, groupId: String, targetBooksCount: int, specificBookIds: List<String>, createdBy: String)
         }
+
+        +class ReadingProgressDTO {
+            +userId: String
+            +bookId: String
+            +lastPageRead: int
+            +totalPages: int
+            +lastReadDate: String
+            +readingStatus: String
+
+            +ReadingProgressDTO()
+            +ReadingProgressDTO(userId: String, bookId: String, lastPageRead: int, totalPages: int, lastReadDate: String, readingStatus: String)
+        }
     }
 
     +interface UserData {
@@ -659,6 +747,19 @@ package datasource {
         +findAll(): List<BookGroupDTO>
         +findByMemberId(userId: String): List<BookGroupDTO>
         +update(bookGroupDTO: BookGroupDTO): void
+    }
+
+    +interface CommunityGoalsData {
+        +save(goalDTO: CommunityGoalDTO): void
+        +findByGroupId(groupId: String): CommunityGoalDTO
+    }
+
+     +interface ReadingProgressData {
+        +save(progressDTO: ReadingProgressDTO): void
+        +findByUserAndBook(userId: String, bookId: String): ReadingProgressDTO
+        +findByUserId(userId: String): List<ReadingProgressDTO>
+        +update(progressDTO: ReadingProgressDTO): void
+        +delete(userId: String, bookId: String): void
     }
 
     +class ExampleUserDataBase {
@@ -689,17 +790,25 @@ package datasource {
         -saveGroupsToFile(): void
     }
 
-    +interface CommunityGoalsData {
-        +save(goalDTO: CommunityGoalDTO): void
-        +findByGroupId(groupId: String): CommunityGoalDTO
-    }
-
     +class ExampleCommunityGoalsDataBase {
         -goals: Map<String, CommunityGoalDTO>
 
         +ExampleCommunityGoalsDatabase()
         +save(goalDTO: CommunityGoalDTO): void
         +findByGroupId(groupId: String): CommunityGoalDTO
+    }
+
+    +class ExampleReadingProgressDataBase {
+        -progressMap: Map<String, ReadingProgressDTO>
+
+        +ExampleReadingProgressDatabase()
+        +save(progressDTO: ReadingProgressDTO): void
+        +findByUserAndBook(userId: String, bookId: String): ReadingProgressDTO
+        +findByUserId(userId: String): List<ReadingProgressDTO>
+        +update(progressDTO: ReadingProgressDTO): void
+        +delete(userId: String, bookId: String): void
+        -loadProgressFromFile(): void
+        -saveProgressToFile(): void
     }
 }
 
@@ -713,6 +822,7 @@ GroupDetailsView ..> Main
 BookView ..> Main
 BookDiscussionView ..> Main
 GroupStatisticsView ..> Main
+VirtualReaderView ..> Main
 
 HomeScreenController --> HomeScreenView
 HomeScreenController --> BookGroupService
@@ -734,6 +844,7 @@ BookController --> BookView
 BookController --> UserDetails
 BookController --> Book
 BookController --> BookGroup
+BookController --> BookReader
 
 RecommendBookController --> RecommendBookView
 RecommendBookController --> RecommendationService
@@ -767,6 +878,11 @@ CommunityGoalsController --> CommunityGoalsService
 CommunityGoalsController --> User
 CommunityGoalsController --> BookGroup
 
+VirtualReaderController --> VirtualReaderView
+VirtualReaderController --> BookReader
+VirtualReaderController --> ReadingSession
+VirtualReaderController --> User
+
 ' domain dependencies
 Authentication --> UserData
 Authentication --> PasswordEncoder
@@ -789,6 +905,7 @@ RegistrationResult --> User
 
 UserDetails --> "*" Book
 UserDetails --> BookGroup
+UserDetails --> "*" ReadingProgress
 
 Book --> Genre
 Book --> BookStatus
@@ -840,12 +957,26 @@ CommunityGoalsService --> Book
 CommunityReadingGoal --> "*" Book
 GoalResult --> "*" Book
 
+BookReader --> ReadingProgressData
+BookReader --> ReadingProgress
+BookReader --> Book
+BookReader --> User
+BookReader --> ReadingSession
+
+ReadingSession --> Book
+ReadingSession --> User
+
+ReadingProgress --> BookStatus
+
+
 ' datasource dependencies
 BookGroupData --> BookGroupDTO
 UserData --> UserDTO
 CommunityGoalsData --> CommunityGoalDTO
+ReadingProgressData --> ReadingProgressDTO
 
 ExampleUserDataBase ..|> UserData
 ExampleBookGroupDataBase ..|> BookGroupData
 ExampleCommunityGoalsDataBase ..|> CommunityGoalsData
+ExampleReadingProgressDataBase ..|> ReadingProgressData
 @enduml
