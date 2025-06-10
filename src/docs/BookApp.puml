@@ -216,6 +216,33 @@ package presentation {
         +handleJoinGroup(): void
         +handleDisplayGroupLibrary(): void
     }
+
+    +class BookDiscussionView {
+        -postContentField: JTextArea
+        -submitPostButton: JButton
+        -selectBookDropdown: JComboBox<Book>
+        -discussionList: JList<BookDiscussion>
+        -commentContentField: JTextArea
+        -submitCommentButton: JButton
+        -errorLabel: JLabel
+
+        +BookDiscussionView()
+        +displayDiscussions(discussions: List<BookDiscussion>): void
+        +displayPostSuccess(): void
+        +displayCommentSuccess(): void
+        +displayError(message: String): void
+    }
+
+    +class BookDiscussionController {
+        -view: BookDiscussionView
+        -user: User
+        -group: BookGroup
+
+        +BookDiscussionController(view: BookDiscussionView, user: User, group: BookGroup)
+        +handlePostDiscussion(): void
+        +handleAddComment(discussion: BookDiscussion): void
+    }
+
 }
 
 package domain {
@@ -323,9 +350,6 @@ package domain {
 
 
     package book {
-    ' REMMEBER TO ADD DEPENDENCIES LATER
-    ' also edit user in authentication class
-    ' also edit the presentation package
         +class UserDetails {
             -bookLibrary: List<Book>
             -bookGroups: List<BookGroup>
@@ -378,6 +402,28 @@ package domain {
             READING
             READ
         }
+
+        +class BookDiscussion {
+            -discussionId: String
+            -author: User
+            -book: Book
+            -groupId: String
+            -content: String
+            -timestamp: Date
+            -comments: List<DiscussionComment>
+
+            +BookDiscussion(author: User, book: Book, groupId: String, content: String)
+            +addComment(comment: DiscussionComment): void
+        }
+
+        +class DiscussionComment {
+            -commentId: String
+            -author: User
+            -content: String
+            -timestamp: Date
+
+            +DiscussionComment(author: User, content: String)
+        }
     }
 
     +class RecommendationService {
@@ -398,6 +444,7 @@ package domain {
             -memberIds: List<String>
             -createdDate: Date
             -groupLibrary: List<Book>
+            -groupDiscussions: List<BookDiscussion>
 
             +BookGroup(groupId: String, groupName: String, description: String, creatorId: String)
 
@@ -405,6 +452,7 @@ package domain {
             +removeMember(userId: String): void
             +isMember(userId: String): boolean
             +addBookToLibrary(book: Book): boolean
+            +addDiscussion(discussion: BookDiscussion): boolean
         }
 
         +class CreateGroupData {
@@ -551,9 +599,16 @@ RegisterController --> Authentication
 
 ProfileController --> ProfileView
 
+
+BookController --> BookView
+
 RecommendBookController --> RecommendBookView
 RecommendBookController --> RecommendationService
 RecommendBookController --> User
+
+BookDiscussionController --> BookDiscussionView
+BookDiscussionController --> User
+BookDiscussionController --> BookGroup
 
 ' domain dependencies
 Authentication --> UserData
@@ -569,9 +624,18 @@ SecureUser --> LoginCredentials
 UserDetails --> "*" Book
 RecommendationService --> UserDetails
 RecommendationService --> BookGroup
+RecommendationService --> User
+Book --> BookReview
 BookGroupService --> CreateGroupResult
 BookGroupService --> JoinGroupResult
 CreateGroupData --> InputValidationResult
+BookGroup --> "*" BookDiscussion
+BookGroup --> "*" Book
+BookDiscussion --> "*" DiscussionComment
+BookDiscussion --> User
+BookDiscussion --> Book
+DiscussionComment --> User
+DiscussionComment --> Book
 
 ' datasource dependencies
 BookGroupData --> BookGroupDTO
@@ -582,6 +646,7 @@ ExampleBookGroupDataBase ..|> BookGroupData
 
 ' Dependencies between layers
 HomeScreenController ..> BookGroup
+ProfileController --> User
 CreateGroupController ..> CreateGroupData
 CreateGroupController ..> CreateGroupResult
 GroupDetailsController ..> BookGroup
@@ -593,8 +658,9 @@ RegisterController ..> RegistrationResult
 BookController --> UserDetails
 BookController --> Book
 BookController --> BookGroup
-
+BookDiscussionController --> BookGroup
 User --> UserDetails
+
 
 
 @enduml
