@@ -259,6 +259,35 @@ package presentation {
         +handleSelectBook(book: Book): void
         -isBookAvailable(book: Book): boolean
     }
+
+    +class CommunityGoalsView {
+        -viewGoalsButton: JButton
+        -setBooksCountInput: JSpinner
+        -bookSelector1: JComboBox<Book>
+        -bookSelector2: JComboBox<Book>
+        -bookSelector3: JComboBox<Book>
+        -setGoalButton: JButton
+        -warningLabel: JLabel
+        -successLabel: JLabel
+
+        +CommunityGoalsView()
+        +displayWarningBookNotInLibrary(): void
+        +displaySuccess(): void
+        +showAdminControls(isAdmin: boolean): void
+    }
+
+    +class CommunityGoalsController {
+        -view: CommunityGoalsView
+        -goalsService: CommunityGoalsService
+        -currentUser: User
+        -currentGroup: BookGroup
+
+        +CommunityGoalsController(view: CommunityGoalsView, goalsService: CommunityGoalsService)
+        +handleViewGoals(): void
+        +handleSetGoal(): void
+        -isUserAdmin(): boolean
+        -validateGoalData(): boolean
+    }
 }
 
 package domain {
@@ -456,13 +485,13 @@ package domain {
             -groupId: String
             -groupName: String
             -description: String
-            -creatorId: String
+            -adminId: String
             -memberIds: List<String>
             -createdDate: Date
             -groupLibrary: List<Book>
             -groupDiscussions: List<BookDiscussion>
 
-            +BookGroup(groupId: String, groupName: String, description: String, creatorId: String)
+            +BookGroup(groupId: String, groupName: String, description: String, adminId: String)
 
             +addMember(userId: String): void
             +removeMember(userId: String): void
@@ -488,7 +517,7 @@ package domain {
             +BookGroupService(bookGroupData: BookGroupData)
 
             +getAllGroups(): List<BookGroup>
-            +createGroup(groupData: CreateGroupData, creatorId: String): CreateGroupResult
+            +createGroup(groupData: CreateGroupData, adminId: String): CreateGroupResult
             +joinGroup(groupId: String, userId: String): JoinGroupResult
             -validateCreateGroupData(data: CreateGroupData): InputValidationResult
         }
@@ -518,8 +547,7 @@ package domain {
         }
     }
 
-    package readingStats
-    {
+    package readingStats {
         +class GroupStatistics {
             -totalBooksRead: int
             -popularGenres: Map<Genre, Integer>
@@ -544,6 +572,41 @@ package domain {
             -calculatePopularBooks(groupId: String): List<Book>
         }
     }
+
+    package communityGoals {
+        +class CommunityReadingGoal {
+            -goalId: String
+            -groupId: String
+            -targetBooksCount: int
+            -specificBooks: List<Book>
+            -createdBy: String
+
+            +CommunityReadingGoal(groupId: String, targetBooksCount: int, specificBooks: List<Book>, createdBy: String)
+            +validateBooksCount(): boolean
+            +validateSpecificBooks(): boolean
+        }
+
+        +class CommunityGoalsService {
+            -bookGroupService: BookGroupService
+            -goalsData: CommunityGoalsData
+
+            +CommunityGoalsService(bookGroupService: BookGroupService, goalsData: CommunityGoalsData)
+            +setGoal(groupId: String, targetBooksCount: int, specificBooks: List<Book>, adminId: String): GoalResult
+            +isUserAdmin(userId: String, groupId: String): boolean
+            +validateBooksInLibrary(books: List<Book>, groupId: String): List<Book>
+        }
+
+        +class GoalResult {
+            -success: boolean
+            -missingBooks: List<Book>
+            -errorMessage: String
+
+            +GoalResult(success: boolean, missingBooks: List<Book>, errorMessage: String)
+            +isSuccess(): boolean
+            +getMissingBooks(): List<Book>
+            +getErrorMessage(): String
+        }
+    }
 }
 
 
@@ -564,12 +627,22 @@ package datasource {
             +groupId: String
             +groupName: String
             +description: String
-            +creatorId: String
+            +adminId: String
             +memberIds: List<String>
             +createdDate: String
 
             +BookGroupDTO()
-            +BookGroupDTO(groupId: String, groupName: String, description: String, creatorId: String, memberIds: String, createdDate: String)
+            +BookGroupDTO(groupId: String, groupName: String, description: String, adminId: String, memberIds: String, createdDate: String)
+        }
+
+        +class CommunityGoalDTO {
+            +goalId: String
+            +groupId: String
+            +targetBooksCount: int
+            +specificBookIds: List<String>
+            +createdBy: String
+
+            +CommunityGoalDTO(goalId: String, groupId: String, targetBooksCount: int, specificBookIds: List<String>, createdBy: String)
         }
     }
 
@@ -614,6 +687,19 @@ package datasource {
         +update(bookGroupDTO: BookGroupDTO): void
         -loadGroupsFromFile(): void
         -saveGroupsToFile(): void
+    }
+
+    +interface CommunityGoalsData {
+        +save(goalDTO: CommunityGoalDTO): void
+        +findByGroupId(groupId: String): CommunityGoalDTO
+    }
+
+    +class ExampleCommunityGoalsDataBase {
+        -goals: Map<String, CommunityGoalDTO>
+
+        +ExampleCommunityGoalsDatabase()
+        +save(goalDTO: CommunityGoalDTO): void
+        +findByGroupId(groupId: String): CommunityGoalDTO
     }
 }
 
@@ -675,6 +761,11 @@ GroupStatisticsController --> GroupStatisticsService
 GroupStatisticsController --> User
 GroupStatisticsController --> BookGroup
 GroupStatisticsController ..> GroupStatistics
+
+CommunityGoalsController --> CommunityGoalsView
+CommunityGoalsController --> CommunityGoalsService
+CommunityGoalsController --> User
+CommunityGoalsController --> BookGroup
 
 ' domain dependencies
 Authentication --> UserData
@@ -739,10 +830,22 @@ GroupStatisticsService --> Book
 GroupStatistics --> "*" Genre
 GroupStatistics --> "*" Book
 
+CommunityGoalsService --> BookGroupService
+CommunityGoalsService --> CommunityGoalsData
+CommunityGoalsService --> CommunityReadingGoal
+CommunityGoalsService --> GoalResult
+CommunityGoalsService --> BookGroup
+CommunityGoalsService --> Book
+
+CommunityReadingGoal --> "*" Book
+GoalResult --> "*" Book
+
 ' datasource dependencies
 BookGroupData --> BookGroupDTO
 UserData --> UserDTO
+CommunityGoalsData --> CommunityGoalDTO
 
 ExampleUserDataBase ..|> UserData
 ExampleBookGroupDataBase ..|> BookGroupData
+ExampleCommunityGoalsDataBase ..|> CommunityGoalsData
 @enduml
