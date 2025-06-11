@@ -313,7 +313,7 @@ package presentation {
 package domain
 {
     package authenticate {
-        package credentialData {
+        package CredentialData {
             +class User {
                 -userid: String
                 -username: String
