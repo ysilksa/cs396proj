@@ -806,7 +806,7 @@ package datasource
     }
 }
 
-' domain dependencies
+' presentation dependencies
 Main ..> LoginView
 Main ..> RegisterView
 Main ..> RecommendBookView
@@ -927,7 +927,6 @@ GroupStatisticsService --> UserData
 GroupStatisticsService ..> GroupStatistics 
 GroupStatisticsService ..> Book
 GroupStatisticsService ..> BookGroup
-
 
 CommunityReadingGoal --> "*" Book 
 CommunityGoalsService --> BookGroupService 
