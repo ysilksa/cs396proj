@@ -209,7 +209,7 @@ package presentation {
 
         +BookDiscussionController(view: BookDiscussionView, user: User, group: BookGroup)
         +handlePostDiscussion(): void
-        +handleAddComment(discussion: BookDiscussion): void
+        +handleAddComment(comment: DiscussionComment): void
     }
 
     +class GroupStatisticsView {
