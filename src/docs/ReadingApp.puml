@@ -806,167 +806,148 @@ package datasource
     }
 }
 
-' presentation dependencies
-LoginView ..> Main
-RegisterView ..> Main
-CreateGroupView ..> Main
-GroupDetailsView ..> Main
-BookView ..> Main
-RecommendBookView ..> Main
-BookDiscussionView ..> Main
-GroupStatisticsView ..> Main
-CommunityGoalsView ..> Main
-VirtualReaderView ..> Main
+' domain dependencies
+Main ..> LoginView
+Main ..> RegisterView
+Main ..> RecommendBookView
+Main ..> BookView
+Main ..> CreateGroupView
+Main ..> GroupDetailsView
+Main ..> BookDiscussionView
+Main ..> GroupStatisticsView
+Main ..> CommunityGoalsView
+Main ..> VirtualReaderView
 
 LoginController --> LoginView
-RegisterController --> RegisterView
-BookController --> BookView
-RecommendBookController --> RecommendBookView
-CreateGroupController --> CreateGroupView
-GroupDetailsController --> GroupDetailsView
-BookDiscussionController --> BookDiscussionView
-GroupStatisticsController --> GroupStatisticsView
-CommunityGoalsController --> CommunityGoalsView
-VirtualReaderController --> VirtualReaderView
-
-LoginController --> Authentication
+LoginController --> Authentication 
 LoginController ..> LoginCredentials
-LoginController ..> AuthenticationResult
-
-RegisterController --> Authentication
+RegisterController --> RegisterView
+RegisterController --> Authentication 
 RegisterController ..> RegistrationData
-RegisterController ..> RegistrationResult
-
+RecommendBookView ..> "*" Book
+RecommendBookController --> RecommendBookView
+RecommendBookController --> User
 BookController --> BookView
 BookController --> UserDetails
-BookController --> Book
 BookController --> BookGroup
 BookController --> BookReader
-
-RecommendBookController --> RecommendationService
-RecommendBookController --> User
-
+CreateGroupController --> CreateGroupView
 CreateGroupController --> BookGroupService
 CreateGroupController --> User
 CreateGroupController ..> CreateGroupData
-CreateGroupController ..> CreateGroupResult
-
-GroupDetailsController --> BookGroupService
+GroupDetailsView ..> BookGroup
+GroupDetailsController --> GroupDetailsView
+GroupDetailsController --> BookGroupService 
 GroupDetailsController --> User
-GroupDetailsController ..> BookGroup
-GroupDetailsController ..> JoinGroupResult
-
+GroupDetailsController --> BookGroup
+GroupDetailsController --> "*" Book
+BookDiscussionView --> "*" Book
+BookDiscussionView --> "*" BookDiscussion
+BookDiscussionController --> BookDiscussionView
 BookDiscussionController --> User
 BookDiscussionController --> BookGroup
-BookDiscussionController --> BookDiscussion
-
+BookDiscussionController ..> DiscussionComment
+GroupStatisticsView --> "*" Book 
+GroupStatisticsView ..> GroupStatistics 
+GroupStatisticsController --> GroupStatisticsView 
 GroupStatisticsController --> GroupStatisticsService
 GroupStatisticsController --> User
 GroupStatisticsController --> BookGroup
-GroupStatisticsController ..> GroupStatistics
-
+GroupStatisticsController ..> Book
+CommunityGoalsView --> "*" Book 
+CommunityGoalsController --> CommunityGoalsView
 CommunityGoalsController --> CommunityGoalsService
 CommunityGoalsController --> User
 CommunityGoalsController --> BookGroup
-
+VirtualReaderView ..> Book
+VirtualReaderController --> VirtualReaderView
 VirtualReaderController --> BookReader
 VirtualReaderController --> ReadingSession
 VirtualReaderController --> User
+VirtualReaderController ..> Book 
 
 ' domain dependencies
-Authentication --> UserData
-Authentication --> PasswordEncoder
-Authentication --> "*" InputValidationResult
-Authentication --> AuthenticationResult
-Authentication --> RegistrationResult
-
-Authentication --> AuthenticationStrategy
-ExampleAuthenticationStrategy ..|> AuthenticationStrategy
-AuthenticationTemplate <|-- ExampleAuthenticationStrategy
-
+User ..> LoginCredentials
 SecureUser -u-> User
-SecureUser --> LoginCredentials
-
-LoginCredentials --> InputValidationResult
-
-RegistrationData --> InputValidationResult
+SecureUser ..> LoginCredentials 
+LoginCredentials ..> InputValidationResult
+RegistrationData ..> InputValidationResult
 RegistrationData -u-> User
 
-User --> UserDetails
+AuthenticationStrategy ..> LoginCredentials
+AuthenticationStrategy ..> AuthenticationResult
+ExampleAuthenticationStrategy ..|> AuthenticationStrategy
+ExampleAuthenticationStrategy --> UserData
+ExampleAuthenticationStrategy --> PasswordEncoder
+ExampleAuthenticationStrategy ..> LoginCredentials
+ExampleAuthenticationStrategy ..> AuthenticationResult
 
+AuthenticationTemplate ..> LoginCredentials 
+AuthenticationTemplate ..> AuthenticationResult
+AuthenticationTemplate ..> InputValidationResult
+AuthenticationTemplate ..> SecureUser
+
+
+Authentication --> UserData
+Authentication --> PasswordEncoder
+Authentication ..> InputValidationResult
+Authentication ..> AuthenticationResult
+Authentication ..> RegistrationResult
+Authentication ..> RegistrationData
+AuthenticationStrategy <|-- Authentication
 AuthenticationResult --> User
 RegistrationResult --> User
 
 UserDetails --> "*" Book
-UserDetails --> BookGroup
-UserDetails --> "*" ReadingProgress
-
-Book --> Genre
-Book --> BookStatus
+UserDetails --> "*" BookGroup
+UserDetails ..> ReadingProgress 
 Book --> BookReview
-
-BookGroup --> "*" BookDiscussion
-BookGroup --> "*" Book
-
-BookDiscussion --> "*" DiscussionComment
 BookDiscussion --> User
-BookDiscussion --> Book
-
-DiscussionComment --> User
-DiscussionComment --> Book
-
-BookGroupService --> BookGroupData
-BookGroupService --> CreateGroupData
-BookGroupService --> CreateGroupResult
-BookGroupService --> JoinGroupResult
-BookGroupService --> BookGroup
-
-CreateGroupData --> InputValidationResult
-
-CreateGroupResult --> BookGroup
-JoinGroupResult --> BookGroup
-
-RecommendationService --> UserDetails
-RecommendationService --> BookGroup
+BookDiscussion --> Book 
+BookDiscussion --> "*" DiscussionComment
 RecommendationService --> User
-RecommendationService --> Book
+RecommendationService --> BookGroup
+RecommendationService ..> Book
 
-GroupStatisticsService --> BookGroupData
-GroupStatisticsService --> UserData
-GroupStatisticsService --> GroupStatistics
-GroupStatisticsService --> BookGroup
-GroupStatisticsService --> User
-GroupStatisticsService --> Book
+BookGroup --> "*" Book
+BookGroup --> "*" BookDiscussion
+CreateGroupData ..> InputValidationResult
+BookGroupService --> BookGroupData
+BookGroupService ..> BookGroup
+BookGroupService ..> CreateGroupData
+BookGroupService ..> CreateGroupResult
+BookGroupService ..> JoinGroupResult
+BookGroupService ..> InputValidationResult
+CreateGroupResult --> BookGroup
+JoinGroupResult --> BookGroup 
 
-GroupStatistics --> "*" Genre
 GroupStatistics --> "*" Book
+GroupStatisticsService --> BookGroupData
+GroupStatisticsService --> UserData 
+GroupStatisticsService ..> GroupStatistics 
+GroupStatisticsService ..> Book
+GroupStatisticsService ..> BookGroup
 
-CommunityGoalsService --> BookGroupService
+
+CommunityReadingGoal --> "*" Book 
+CommunityGoalsService --> BookGroupService 
 CommunityGoalsService --> CommunityGoalsData
-CommunityGoalsService --> CommunityReadingGoal
-CommunityGoalsService --> GoalResult
-CommunityGoalsService --> BookGroup
-CommunityGoalsService --> Book
-
-CommunityReadingGoal --> "*" Book
-GoalResult --> "*" Book
-
-BookReader --> ReadingProgressData
-BookReader --> ReadingProgress
-BookReader --> Book
-BookReader --> User
-BookReader --> ReadingSession
+CommunityGoalsService ..> Book 
+CommunityGoalsService ..> GoalResult
+GoalResult --> "*" Book 
 
 ReadingSession --> Book
 ReadingSession --> User
-
-ReadingProgress --> BookStatus
+BookReader --> ReadingProgressData
+BookReader --> "*" ReadingSession
+BookReader ..> User
+BookReader ..> Book
 
 ' datasource dependencies
-BookGroupData --> BookGroupDTO
-UserData --> UserDTO
-CommunityGoalsData --> CommunityGoalDTO
-ReadingProgressData --> ReadingProgressDTO
+UserData ..> UserDTO
+BookGroupData ..> BookGroupDTO
+CommunityGoalsData ..> CommunityGoalDTO
+ReadingProgressData ..> ReadingProgressDTO
 
 ExampleUserDataBase ..|> UserData
 ExampleBookGroupDataBase ..|> BookGroupData
