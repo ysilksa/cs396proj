@@ -60,13 +60,6 @@ package presentation {
         -validatePasswordsMatch(): boolean
     }
 
-    +class ProfileController {
-        -model: User
-        -view: ProfileView
-
-        +ProfileController(view: ProfileView)
-    }
-
     +class RecommendBookView {
         -bookChooser: JComboBox<Book>
         -recipientChooser: JComboBox<String>
@@ -316,6 +309,501 @@ package presentation {
         -updateViewWithCurrentPage(): void
     }
 }
+
+package domain
+{
+    package authenticate {
+        package credentialData {
+            +class User {
+                -userid: String
+                -username: String
+                -email: String
+
+                +User(userId: String, email: String, username: String)
+                +matches(credentials: LoginCredentials): boolean
+                +hashCode(): int
+            }
+
+            +class SecureUser {
+                -user: User
+                -passwordHash: String
+                -salt: String
+
+                +SecureUser(user: User, passwordHash: String, salt: String)
+                +authenticateWith(credentials: LoginCredentials): boolean
+                +getUser(): User
+            }
+
+            +class LoginCredentials {
+                -username: String
+                -password: String
+
+                +LoginCredentials(username: String, password: String)
+                +validateFormat(): InputValidationResult
+                +hashWith(salt: String): String
+            }
+
+            +class RegistrationData {
+                -email: String
+                -username: String
+                -password: String
+
+                +RegistrationData(email: String, username: String, password: String)
+                +validateFormat(): InputValidationResult
+                +toUser(): User
+            }
+        }
+
+        +interface AuthenticationStrategy {
+            +authenticate(credentials: LoginCredentials): AuthenticationResult
+        }
+
+        +class ExampleAuthenticationStrategy {
+            -userData: UserData
+            -passwordEncoder: PasswordEncoder
+
+            +ExampleAuthenticationStrategy(userData: UserData, passwordEncoder: PasswordEncoder)
+            +authenticate(credentials: LoginCredentials): AuthenticationResult
+        }
+
+        +abstract class AuthenticationTemplate {
+            +authenticate(credentials: LoginCredentials): AuthenticationResult
+            #validateCredentials(credentials: LoginCredentials): InputValidationResult
+            #findUser(username: String): SecureUser
+            #verifyPassword(credentials: LoginCredentials, user: SecureUser): boolean
+            #createResult(user: User, success: boolean, message: String): AuthenticationResult
+        }
+
+        +class Authentication {
+            -userData: UserData
+            -passwordEncoder: PasswordEncoder
+
+            +Authentication(userData: UserData, passwordEncoder: PasswordEncoder)
+
+            +authenticate(credentials: LoginCredentials): AuthenticationResult
+            +register(registrationData: RegistrationData): RegistrationResult
+
+            -validateRegistrationData(data: RegistrationData): InputValidationResult
+            -checkUserExists(username: String, email: String): boolean
+            -createSecureUser(data: RegistrationData): SecureUser
+        }
+
+        +class PasswordEncoder {
+            +generateSalt(): String
+            +hash(password: String, salt: String): String
+            +verify(password: String, salt: String, hashedPassword: String): boolean
+        }
+
+        +class InputValidationResult {
+            -isValid: boolean
+            -errorMessage: String
+
+            +InputValidationResult(isValid: boolean, errorMessage: String)
+
+            +isValid(): boolean
+            +getErrorMessage(): String
+        }
+
+        +class AuthenticationResult {
+            -success: boolean
+            -user: User
+            -errorMessage: String
+
+            +AuthenticationResult(success: boolean, user: User, errorMessage: String)
+
+            +isSuccess(): boolean
+            +getUser(): User
+            +getErrorMessage(): String
+        }
+
+        +class RegistrationResult {
+            -success: boolean
+            -user: User
+            -errorMessage: String
+
+            +RegistrationResult(success: boolean, user: User, errorMessage: String)
+
+            +isSuccess(): boolean
+            +getUser(): User
+            +getErrorMessage(): String
+        }
+    }
+    package book {
+        +class UserDetails {
+            -bookLibrary: List<Book>
+            -bookGroups: List<BookGroup>
+
+            +UserDetails()
+
+            +addBook(book: Book): boolean
+            +joinBookGroup(bookGroup: BookGroup): boolean
+            +recommendBook(book: Book): boolean
+            +editBook(updatedBook: Book): boolean
+            +removeBook(book: Book): boolean
+
+            +getReadingProgress(bookId: String): ReadingProgress
+            +updateReadingProgress(bookId: String, progress: ReadingProgress): void
+            +getPersonalBooks(): List<Book>
+            +getGroupBooks(): List<Book>
+        }
+
+        +class Book {
+            -genre: Genre
+            -totalPages: int
+            -pagesRead: int
+            -starReview: int
+            -writtenReview: String
+            -bookFile: File
+            -bookStatus: BookStatus
+            -bookReview: BookReview
+            -currentPage: int
+
+            +Book(bookFile: File, genre: Genre, totalPages: int)
+            +addReview(stars: int): boolean
+            +addReview(stars: int, review: String): boolean
+            +addProgress(currPages: int): boolean
+            +updateDetails(newGenre: Genre, newTotalPages: int): void
+        }
+
+        +class BookReview {
+            -numStars: int
+            -review: String
+
+            +BookReview(numStars: int, review: String)
+        }
+
+        +enum Genre {
+            ACTION
+            FICTION
+            HISTORICAL
+            HORROR
+            MYSTERY
+            NON-FICTION
+            ROMANCE
+            SCIENCE_FICTION
+        }
+
+        +enum BookStatus {
+            WANT_TO_READ
+            READING
+            READ
+        }
+
+        +class BookDiscussion {
+            -discussionId: String
+            -author: User
+            -book: Book
+            -groupId: String
+            -content: String
+            -timestamp: Date
+            -comments: List<DiscussionComment>
+
+            +BookDiscussion(author: User, book: Book, groupId: String, content: String)
+            +addComment(comment: DiscussionComment): void
+        }
+
+        +class DiscussionComment {
+            -commentId: String
+            -author: User
+            -content: String
+            -timestamp: Date
+
+            +DiscussionComment(author: User, content: String)
+        }
+    }
+
+    +class RecommendationService {
+        -userData: User
+        -groupData: BookGroup
+
+        +RecommendationService(user: User, bookGroup: BookGroup)
+        +recommendToUser(sender: User, recipient: String, book: Book): boolean
+        +recommendToUser(sender: User, recipient: String, book: Book): boolean
+    }
+
+    package bookGroup {
+        +class BookGroup {
+            -groupId: String
+            -groupName: String
+            -description: String
+            -adminId: String
+            -memberIds: List<String>
+            -createdDate: Date
+            -groupLibrary: List<Book>
+            -groupDiscussions: List<BookDiscussion>
+
+            +BookGroup(groupId: String, groupName: String, description: String, adminId: String)
+
+            +addMember(userId: String): void
+            +removeMember(userId: String): void
+            +isMember(userId: String): boolean
+            +addBookToLibrary(book: Book): boolean
+            +addDiscussion(discussion: BookDiscussion): boolean
+        }
+
+        +class CreateGroupData {
+            -groupName: String
+            -description: String
+
+            +CreateGroupData(groupName: String, description: String)
+            +validateFormat(): InputValidationResult
+        }
+
+        +class BookGroupService {
+            -bookGroupData: BookGroupData
+
+            +BookGroupService(bookGroupData: BookGroupData)
+
+            +getAllGroups(): List<BookGroup>
+            +createGroup(groupData: CreateGroupData, adminId: String): CreateGroupResult
+            +joinGroup(groupId: String, userId: String): JoinGroupResult
+            -validateCreateGroupData(data: CreateGroupData): InputValidationResult
+        }
+
+        +class CreateGroupResult {
+            -success: boolean
+            -bookGroup: BookGroup
+            -errorMessage: String
+
+            +CreateGroupResult(success: boolean, bookGroup: BookGroup, errorMessage: String)
+            +isSuccess(): boolean
+        }
+
+        +class JoinGroupResult {
+            -success: boolean
+            -bookGroup: BookGroup
+            -errorMessage: String
+
+            +JoinGroupResult(success: boolean, bookGroup: BookGroup, errorMessage: String)
+            +isSuccess(): boolean
+        }
+    }
+
+    package readingStats {
+        +class GroupStatistics {
+            -totalBooksRead: int
+            -popularGenres: Map<Genre, Integer>
+            -popularBooks: List<Book>
+            -groupId: String
+
+            +GroupStatistics(groupId: String, totalBooksRead: int, popularGenres: Map<Genre, Integer>, popularBooks: List<Book>)
+        }
+
+        +class GroupStatisticsService {
+            -bookGroupData: BookGroupData
+            -userData: UserData
+
+            +GroupStatisticsService(bookGroupData: BookGroupData, userData: UserData)
+            +generateGroupStatistics(groupId: String): GroupStatistics
+            +isBookAvailableToUser(book: Book, user: User, group: BookGroup): boolean
+            -calculateTotalBooksRead(groupId: String): int
+            -calculatePopularGenres(groupId: String): Map<Genre, Integer>
+            -calculatePopularBooks(groupId: String): List<Book>
+        }
+    }
+
+    package communityGoals {
+        +class CommunityReadingGoal {
+            -goalId: String
+            -groupId: String
+            -targetBooksCount: int
+            -specificBooks: List<Book>
+            -createdBy: String
+
+            +CommunityReadingGoal(groupId: String, targetBooksCount: int, specificBooks: List<Book>, createdBy: String)
+            +validateBooksCount(): boolean
+            +validateSpecificBooks(): boolean
+        }
+
+        +class CommunityGoalsService {
+            -bookGroupService: BookGroupService
+            -goalsData: CommunityGoalsData
+
+            +CommunityGoalsService(bookGroupService: BookGroupService, goalsData: CommunityGoalsData)
+            +setGoal(groupId: String, targetBooksCount: int, specificBooks: List<Book>, adminId: String): GoalResult
+            +isUserAdmin(userId: String, groupId: String): boolean
+            +validateBooksInLibrary(books: List<Book>, groupId: String): List<Book>
+        }
+
+        +class GoalResult {
+            -success: boolean
+            -missingBooks: List<Book>
+            -errorMessage: String
+
+            +GoalResult(success: boolean, missingBooks: List<Book>, errorMessage: String)
+            +isSuccess(): boolean
+        }
+    }
+
+    package virtualReading {
+        +class ReadingSession {
+            -sessionId: String
+            -book: Book
+            -user: User
+            -currentPage: int
+            -sessionStartTime: Date
+            -lastAccessTime: Date
+
+            +ReadingSession(book: Book, user: User, startingPage: int)
+            +setCurrentPage(page: int): void
+            +updateLastAccessTime(): void
+        }
+
+        +class BookReader {
+            -readingProgressData: ReadingProgressData
+            -activeSessions: Map<String, ReadingSession>
+
+            +BookReader(readingProgressData: ReadingProgressData)
+            +openBook(book: Book, user: User): ReadingSession
+            +saveProgress(session: ReadingSession): void
+            +closeBook(session: ReadingSession): void
+            +navigateToPage(session: ReadingSession, pageNumber: int): boolean
+            -createReadingSession(book: Book, user: User): ReadingSession
+        }
+
+        +class ReadingProgress {
+            -userId: String
+            -bookId: String
+            -lastPageRead: int
+            -totalPages: int
+            -lastReadDate: Date
+            -readingStatus: BookStatus
+
+            +ReadingProgress(userId: String, bookId: String, totalPages: int)
+            +updateProgress(pageNumber: int): void
+            +isCompleted(): boolean
+        }
+    }
+}
+
+package datasource
+{
+    package dto {
+        +class UserDTO {
+            +userId: String
+            +username: String
+            +email: String
+            +passwordHash: String
+            +salt: String
+
+            +UserDTO()
+            +UserDTO(userId: String, username: String, email: String, passwordHash: String, salt: String)
+        }
+
+        +class BookGroupDTO {
+            +groupId: String
+            +groupName: String
+            +description: String
+            +adminId: String
+            +memberIds: List<String>
+            +createdDate: String
+
+            +BookGroupDTO()
+            +BookGroupDTO(groupId: String, groupName: String, description: String, adminId: String, memberIds: String, createdDate: String)
+        }
+
+        +class CommunityGoalDTO {
+            +goalId: String
+            +groupId: String
+            +targetBooksCount: int
+            +specificBookIds: List<String>
+            +createdBy: String
+
+            +CommunityGoalDTO(goalId: String, groupId: String, targetBooksCount: int, specificBookIds: List<String>, createdBy: String)
+        }
+
+        +class ReadingProgressDTO {
+            +userId: String
+            +bookId: String
+            +lastPageRead: int
+            +totalPages: int
+            +lastReadDate: String
+            +readingStatus: String
+
+            +ReadingProgressDTO()
+            +ReadingProgressDTO(userId: String, bookId: String, lastPageRead: int, totalPages: int, lastReadDate: String, readingStatus: String)
+        }
+    }
+
+    +interface UserData {
+        +save(userDTO: UserDTO): void
+        +findByUsername(username: String): UserDTO
+        +findByEmail(email: String): UserDTO
+        +exists(username: String, email: String): boolean
+    }
+
+    +interface BookGroupData {
+        +save(bookGroupDTO: BookGroupDTO): void
+        +findById(groupId: String): BookGroupDTO
+        +findAll(): List<BookGroupDTO>
+        +findByMemberId(userId: String): List<BookGroupDTO>
+        +update(bookGroupDTO: BookGroupDTO): void
+    }
+
+    +interface CommunityGoalsData {
+        +save(goalDTO: CommunityGoalDTO): void
+        +findByGroupId(groupId: String): CommunityGoalDTO
+    }
+
+     +interface ReadingProgressData {
+        +save(progressDTO: ReadingProgressDTO): void
+        +findByUserAndBook(userId: String, bookId: String): ReadingProgressDTO
+        +findByUserId(userId: String): List<ReadingProgressDTO>
+        +update(progressDTO: ReadingProgressDTO): void
+        +delete(userId: String, bookId: String): void
+    }
+
+    +class ExampleUserDataBase {
+        -users: Map<String, UserDTO>
+        -usersByEmail: Map<String, UserDTO>
+
+        +ExampleUserDatabase()
+
+        +save(userDTO: UserDTO): void
+        +findByUsername(username: String): UserDTO
+        +findByEmail(email: String): UserDTO
+        +exists(username: String, email: String): boolean
+        -loadUsersFromFile(): void
+        -saveUsersToFile(): void
+    }
+
+    +class ExampleBookGroupDataBase {
+        -groups: Map<String, BookGroupDTO>
+
+        +ExampleBookGroupDatabase()
+
+        +save(bookGroupDTO: BookGroupDTO): void
+        +findById(groupId: String): BookGroupDTO
+        +findAll(): List<BookGroupDTO>
+        +findByMemberId(userId: String): List<BookGroupDTO>
+        +update(bookGroupDTO: BookGroupDTO): void
+        -loadGroupsFromFile(): void
+        -saveGroupsToFile(): void
+    }
+
+    +class ExampleCommunityGoalsDataBase {
+        -goals: Map<String, CommunityGoalDTO>
+
+        +ExampleCommunityGoalsDatabase()
+        +save(goalDTO: CommunityGoalDTO): void
+        +findByGroupId(groupId: String): CommunityGoalDTO
+    }
+
+    +class ExampleReadingProgressDataBase {
+        -progressMap: Map<String, ReadingProgressDTO>
+
+        +ExampleReadingProgressDatabase()
+        +save(progressDTO: ReadingProgressDTO): void
+        +findByUserAndBook(userId: String, bookId: String): ReadingProgressDTO
+        +findByUserId(userId: String): List<ReadingProgressDTO>
+        +update(progressDTO: ReadingProgressDTO): void
+        +delete(userId: String, bookId: String): void
+        -loadProgressFromFile(): void
+        -saveProgressToFile(): void
+    }
+}
+
+' presentation dependencies
 LoginView ..> Main
 RegisterView ..> Main
 CreateGroupView ..> Main
@@ -338,76 +826,147 @@ GroupStatisticsController --> GroupStatisticsView
 CommunityGoalsController --> CommunityGoalsView
 VirtualReaderController --> VirtualReaderView
 
-package domain
-{
-    +interface AuthenticationService {
-        +authenticate(credentials: LoginCredentials): AuthenticationResult
-        +register(data: RegistrationData): RegistrationResult
-        +logout(userId: String): void
-    }
+LoginController --> Authentication
+LoginController ..> LoginCredentials
+LoginController ..> AuthenticationResult
 
-    +interface BookService {
-        +addBook(book: Book): BookResult
-        +updateBook(book: Book): BookResult
-        +deleteBook(bookId: String): BookResult
-        +searchBooks(criteria: SearchCriteria): List<Book>
-        +getBooksByUser(userId: String): List<Book>
-    }
+RegisterController --> Authentication
+RegisterController ..> RegistrationData
+RegisterController ..> RegistrationResult
 
-    +interface BookGroupService {
-        +createGroup(groupData: CreateGroupData): GroupResult
-        +joinGroup(groupId: String, userId: String): GroupResult
-        +leaveGroup(groupId: String, userId: String): GroupResult
-        +getGroupsByUser(userId: String): List<BookGroup>
-        +getGroupDetails(groupId: String): BookGroup
-    }
+BookController --> BookView
+BookController --> UserDetails
+BookController --> Book
+BookController --> BookGroup
+BookController --> BookReader
 
-    +interface ReadingProgressService {
-        +updateProgress(userId: String, bookId: String, progress: int): void
-        +getProgress(userId: String, bookId: String): ReadingProgress
-        +getReadingStatistics(userId: String): ReadingStatistics
-    }
+RecommendBookController --> RecommendationService
+RecommendBookController --> User
 
-    +interface VirtualReaderService {
-        +openBook(book: Book, user: User): ReadingSession
-        +navigateToPage(sessionId: String, pageNumber: int): PageContent
-        +saveProgress(sessionId: String): void
-        +closeBook(sessionId: String): void
-    }
+CreateGroupController --> BookGroupService
+CreateGroupController --> User
+CreateGroupController ..> CreateGroupData
+CreateGroupController ..> CreateGroupResult
 
-    +interface DiscussionService {
-        +createDiscussion(groupId: String, userId: String, content: String, book: Book): DiscussionResult
-        +addComment(discussionId: String, userId: String, content: String): CommentResult
-        +getDiscussions(groupId: String): List<BookDiscussion>
-    }
+GroupDetailsController --> BookGroupService
+GroupDetailsController --> User
+GroupDetailsController ..> BookGroup
+GroupDetailsController ..> JoinGroupResult
 
-    package entities
-    {
-        +class User {
-        }
+BookDiscussionController --> User
+BookDiscussionController --> BookGroup
+BookDiscussionController --> BookDiscussion
 
-        +class Book {
-        }
+GroupStatisticsController --> GroupStatisticsService
+GroupStatisticsController --> User
+GroupStatisticsController --> BookGroup
+GroupStatisticsController ..> GroupStatistics
 
-        +class BookGroup {
-        }
+CommunityGoalsController --> CommunityGoalsService
+CommunityGoalsController --> User
+CommunityGoalsController --> BookGroup
 
-        +class ReadingSession {
-        }
+VirtualReaderController --> BookReader
+VirtualReaderController --> ReadingSession
+VirtualReaderController --> User
 
-        +class BookDiscussion {
-        }
-    }
+' domain dependencies
+Authentication --> UserData
+Authentication --> PasswordEncoder
+Authentication --> "*" InputValidationResult
+Authentication --> AuthenticationResult
+Authentication --> RegistrationResult
 
-    package objects
-    {
-    }
+Authentication --> AuthenticationStrategy
+ExampleAuthenticationStrategy ..|> AuthenticationStrategy
+AuthenticationTemplate <|-- ExampleAuthenticationStrategy
 
-    package services
-    {
-    }
-}
-package datasource
-{
-}
+SecureUser -u-> User
+SecureUser --> LoginCredentials
+
+LoginCredentials --> InputValidationResult
+
+RegistrationData --> InputValidationResult
+RegistrationData -u-> User
+
+User --> UserDetails
+
+AuthenticationResult --> User
+RegistrationResult --> User
+
+UserDetails --> "*" Book
+UserDetails --> BookGroup
+UserDetails --> "*" ReadingProgress
+
+Book --> Genre
+Book --> BookStatus
+Book --> BookReview
+
+BookGroup --> "*" BookDiscussion
+BookGroup --> "*" Book
+
+BookDiscussion --> "*" DiscussionComment
+BookDiscussion --> User
+BookDiscussion --> Book
+
+DiscussionComment --> User
+DiscussionComment --> Book
+
+BookGroupService --> BookGroupData
+BookGroupService --> CreateGroupData
+BookGroupService --> CreateGroupResult
+BookGroupService --> JoinGroupResult
+BookGroupService --> BookGroup
+
+CreateGroupData --> InputValidationResult
+
+CreateGroupResult --> BookGroup
+JoinGroupResult --> BookGroup
+
+RecommendationService --> UserDetails
+RecommendationService --> BookGroup
+RecommendationService --> User
+RecommendationService --> Book
+
+GroupStatisticsService --> BookGroupData
+GroupStatisticsService --> UserData
+GroupStatisticsService --> GroupStatistics
+GroupStatisticsService --> BookGroup
+GroupStatisticsService --> User
+GroupStatisticsService --> Book
+
+GroupStatistics --> "*" Genre
+GroupStatistics --> "*" Book
+
+CommunityGoalsService --> BookGroupService
+CommunityGoalsService --> CommunityGoalsData
+CommunityGoalsService --> CommunityReadingGoal
+CommunityGoalsService --> GoalResult
+CommunityGoalsService --> BookGroup
+CommunityGoalsService --> Book
+
+CommunityReadingGoal --> "*" Book
+GoalResult --> "*" Book
+
+BookReader --> ReadingProgressData
+BookReader --> ReadingProgress
+BookReader --> Book
+BookReader --> User
+BookReader --> ReadingSession
+
+ReadingSession --> Book
+ReadingSession --> User
+
+ReadingProgress --> BookStatus
+
+' datasource dependencies
+BookGroupData --> BookGroupDTO
+UserData --> UserDTO
+CommunityGoalsData --> CommunityGoalDTO
+ReadingProgressData --> ReadingProgressDTO
+
+ExampleUserDataBase ..|> UserData
+ExampleBookGroupDataBase ..|> BookGroupData
+ExampleCommunityGoalsDataBase ..|> CommunityGoalsData
+ExampleReadingProgressDataBase ..|> ReadingProgressData
 @enduml
