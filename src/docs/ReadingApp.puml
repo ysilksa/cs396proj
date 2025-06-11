@@ -434,8 +434,9 @@ package domain
             -bookLibrary: List<Book>
             -bookGroups: List<BookGroup>
 
-            +UserDetails()
+            +UserDetails(userId: String)
 
+            +userIdMatches(id: String): boolean
             +addBook(book: Book): boolean
             +joinBookGroup(bookGroup: BookGroup): boolean
             +recommendBook(book: Book): boolean
