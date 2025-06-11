@@ -430,6 +430,7 @@ package domain
     }
     package book {
         +class UserDetails {
+            -userId: String
             -bookLibrary: List<Book>
             -bookGroups: List<BookGroup>
 
